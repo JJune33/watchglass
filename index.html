@@ -566,11 +566,11 @@
     gl.uniform2f(U.uSize,pct(state.glassW),pct(state.glassH));
     gl.uniform1f(U.uRoundness,pct(state.roundness));
     gl.uniform1i(U.uShape,Number(state.shape));
-    gl.uniform1f(U.uConvexity,0.04+pow(pct(state.convexity),1.12)*1.08);
-    gl.uniform1f(U.uProfile,pow((Number(state.profile)-10)/240,0.92));
+    gl.uniform1f(U.uConvexity,0.04+Math.pow(pct(state.convexity),1.12)*1.08);
+    gl.uniform1f(U.uProfile,Math.pow((Number(state.profile)-10)/240,0.92));
     gl.uniform1f(U.uRefraction,Number(state.refraction)/280);
     gl.uniform1f(U.uEdgeThickness,0.02+pct(state.edgeThickness)*0.30);
-    gl.uniform1f(U.uDepth,0.02+pow(pct(state.depth),0.96));
+    gl.uniform1f(U.uDepth,0.02+Math.pow(pct(state.depth),0.96));
     gl.uniform1f(U.uAberration,pct(state.aberration)*0.008);
     gl.uniform1f(U.uBlur,pct(state.blur)*4.0);
     gl.uniform1f(U.uSaturation,Number(state.saturation)/100);
