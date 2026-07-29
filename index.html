@@ -201,19 +201,13 @@
         <div class="control"><label for="exportSize">PNG formaat</label><select id="exportSize"><option value="320">320 × 320</option><option value="640">640 × 640</option><option value="1024" selected>1024 × 1024</option><option value="2048">2048 × 2048</option><option value="4096">4096 × 4096</option></select></div>
         <label class="check"><input id="cropToGlass" type="checkbox"> Bijsnijden tot glasvorm</label>
         <div class="exportGrid">
-          <button id="exportGlass" class="primary">Glass base PNG</button>
-          <button id="exportHighlights">Highlights PNG</button>
-          <button id="exportShadows">Shadow rim PNG</button>
-          <button id="exportMask">Mask PNG</button>
-          <button id="exportDepth">Depth pass PNG</button>
-          <button id="exportOverlay">Preview match laag PNG</button>
+          <button id="exportGlass" class="primary">Horloge glas PNG</button>
           <button id="exportComposite">Preview met afbeelding PNG</button>
-          <button id="exportMap">Lens displacement map PNG</button>
           <button id="savePreset">Instellingen opslaan JSON</button>
           <label class="fileButton" for="presetInput">Instellingen laden</label>
           <input id="presetInput" type="file" accept="application/json,.json">
         </div>
-        <p class="note">Speciaal voor jouw watch face workflow. Aanbevolen lagenvolgorde: dial en details onder glas, daarna wijzers of extra onderdelen, daarboven Glass base PNG, vervolgens Highlights PNG en indien gewenst Shadow rim PNG. Mask PNG is handig voor selecties en uitsnedes. Depth pass PNG kan dienen als extra hulplaag in Photoshop of Photopea.</p>
+        <p class="note">Eenvoudige workflow voor jouw toepassing. De knop Horloge glas PNG maakt één enkele transparante glaslaag met bolling, reflectie, randlicht, tint en schaduw, zonder de referentieafbeelding. Die kun je direct als bovenste glaslaag in je ontwerp gebruiken.</p>
       </div>
     </details>
 
@@ -696,14 +690,8 @@
       canvas.width=oldW;canvas.height=oldH;render();
     },'image/png');
   }
-  document.getElementById('exportGlass').onclick=()=>renderExport(0,3,'jives-glass-base.png');
-  document.getElementById('exportHighlights').onclick=()=>renderExport(0,5,'jives-glass-highlights.png');
-  document.getElementById('exportShadows').onclick=()=>renderExport(0,6,'jives-glass-shadow-rim.png');
-  document.getElementById('exportMask').onclick=()=>renderExport(0,7,'jives-glass-mask.png');
-  document.getElementById('exportDepth').onclick=()=>renderExport(0,8,'jives-glass-depth-pass.png');
-  document.getElementById('exportOverlay').onclick=()=>renderExport(0,4,'jives-glass-preview-match-layer.png');
+  document.getElementById('exportGlass').onclick=()=>renderExport(0,3,'jives-horloge-glas.png');
   document.getElementById('exportComposite').onclick=()=>renderExport(1,0,'jives-glass-preview.png');
-  document.getElementById('exportMap').onclick=()=>renderExport(0,2,'jives-glass-displacement-map.png');
   document.getElementById('savePreset').onclick=()=>{
     const clean={...state};delete clean.imageScaleX;delete clean.imageScaleY;delete clean.imageOffsetX;delete clean.imageOffsetY;
     downloadBlob(new Blob([JSON.stringify(clean,null,2)],{type:'application/json'}),'jives-glass-settings.json');setStatus('Instellingen opgeslagen','JSON preset gemaakt.')
