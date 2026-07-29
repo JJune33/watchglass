@@ -192,6 +192,8 @@
         <button data-preset="studio">Studio glans</button>
         <button data-preset="vintage">Vintage acryl</button>
         <button data-preset="smoked">Smoked glass</button>
+        <button data-preset="amberDome">Amber dome</button>
+        <button data-preset="prismaticDome">Prismatic dome</button>
       </div>
     </details>
 
@@ -646,7 +648,9 @@
     sapphire:{convexity:58,profile:112,refraction:34,edgeThickness:48,depth:48,aberration:10,blur:2,tintColor:'#75bfff',tintAmount:18,glassOpacity:10,reflectionColor:'#c9ecff',reflection:75,lightType:0,edgeLight:105,shadow:22,haze:1,grain:0,sparkle:3},
     studio:{convexity:55,profile:110,refraction:28,edgeThickness:43,depth:35,tintAmount:7,glassOpacity:13,reflection:132,lightType:3,lightWidth:17,lightLength:104,softness:28,lightOffset:-14,edgeLight:88,shadow:21,sparkle:7},
     vintage:{convexity:76,profile:65,refraction:52,edgeThickness:72,depth:61,aberration:34,blur:10,tintColor:'#ffe5b1',tintAmount:17,glassOpacity:22,reflectionColor:'#fff2d1',reflection:61,lightType:2,edgeLight:118,shadow:39,haze:12,grain:12,sparkle:2},
-    smoked:{convexity:48,profile:130,refraction:24,edgeThickness:45,depth:44,aberration:7,blur:3,tintColor:'#6f7b8b',tintAmount:43,glassOpacity:28,reflectionColor:'#d8e1ed',reflection:48,lightType:5,edgeLight:75,shadow:48,haze:6,grain:2,sparkle:1}
+    smoked:{convexity:48,profile:130,refraction:24,edgeThickness:45,depth:44,aberration:7,blur:3,tintColor:'#6f7b8b',tintAmount:43,glassOpacity:28,reflectionColor:'#d8e1ed',reflection:48,lightType:5,edgeLight:75,shadow:48,haze:6,grain:2,sparkle:1},
+    amberDome:{shape:0,convexity:96,profile:74,refraction:34,edgeThickness:78,depth:74,aberration:4,blur:5,saturation:84,contrast:92,tintColor:'#e4cf35',tintAmount:48,glassOpacity:38,lightType:3,reflection:132,lightAngle:320,lightElevation:55,lightOffset:24,lightWidth:22,lightLength:120,softness:20,reflectionColor:'#fff6d4',edgeLight:148,edgeSoftness:26,rimBalance:60,shadow:44,shadowSoftness:48,haze:16,grain:18,sparkle:4},
+    prismaticDome:{shape:0,convexity:94,profile:78,refraction:56,edgeThickness:72,depth:68,aberration:72,blur:3,saturation:100,contrast:104,tintColor:'#c7def8',tintAmount:8,glassOpacity:16,lightType:0,reflection:126,lightAngle:321,lightElevation:57,lightOffset:22,lightWidth:20,lightLength:114,softness:18,reflectionColor:'#ffffff',edgeLight:138,edgeSoftness:24,rimBalance:58,shadow:38,shadowSoftness:44,haze:9,grain:14,sparkle:3}
   };
   document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{Object.assign(state,presets[b.dataset.preset]);syncUI();setStatus('Stijl toegepast',b.textContent)});
 
