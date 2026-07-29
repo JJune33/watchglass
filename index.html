@@ -151,7 +151,7 @@
     <details open>
       <summary>Reflectie</summary>
       <div class="section">
-        <div class="control"><label for="lightType">Lichttype</label><select id="lightType"><option value="0">Studio strip</option><option value="1">Brede softbox</option><option value="2">Gebogen raamlicht</option><option value="3">Dubbele strip</option><option value="4">Puntglans</option><option value="5">Zachte hemel</option><option value="6">Bolle studio omgeving</option><option value="7">Prismatische studio</option></select></div>
+        <div class="control"><label for="lightType">Lichttype</label><select id="lightType"><option value="0">Studio strip</option><option value="1">Brede softbox</option><option value="2">Gebogen raamlicht</option><option value="3">Dubbele strip</option><option value="4">Puntglans</option><option value="5">Zachte hemel</option><option value="6">Watch crystal arc</option><option value="7">Prism watch crystal</option></select></div>
         <div class="control"><label for="reflection">Reflectiesterkte</label><output data-for="reflection"></output><input id="reflection" type="range" min="0" max="200" step="1" value="82"></div>
         <div class="control"><label for="lightAngle">Lichthoek</label><output data-for="lightAngle"></output><input id="lightAngle" type="range" min="0" max="360" step="1" value="322"></div>
         <div class="control"><label for="lightElevation">Lichthoogte</label><output data-for="lightElevation"></output><input id="lightElevation" type="range" min="5" max="90" step="1" value="52"></div>
@@ -186,14 +186,14 @@
     <details open>
       <summary>Snelle stijlen</summary>
       <div class="section presetGrid">
-        <button data-preset="clear">Helder mineraal</button>
-        <button data-preset="domed">Sterk bol</button>
-        <button data-preset="sapphire">Saffier blauw</button>
-        <button data-preset="studio">Studio glans</button>
-        <button data-preset="vintage">Vintage acryl</button>
-        <button data-preset="smoked">Smoked glass</button>
+        <button data-preset="luxuryDome">Luxury dome</button>
+        <button data-preset="watchSapphire">Watch sapphire</button>
+        <button data-preset="warmAcrylic">Warm acrylic</button>
+        <button data-preset="studioCrystal">Studio crystal</button>
         <button data-preset="amberDome">Amber dome</button>
         <button data-preset="prismaticDome">Prismatic dome</button>
+        <button data-preset="smokedBlack">Smoked black</button>
+        <button data-preset="clearMineral">Clear mineral</button>
       </div>
     </details>
 
@@ -357,30 +357,36 @@
       if(uLightType==1){
         pattern=stripLight(p,offset,width*2.8,len*1.08,mix(0.55,1.0,uSoftness));
       }else if(uLightType==2){
-        vec2 c=p-vec2(0.48+offset*0.42,-0.12);
-        float radius=mix(0.62,1.34,clamp(len,0.0,1.5)/1.5);
-        pattern=gaussian(abs(length(c)-radius),width*0.72,uSoftness)*smoothstep(-0.45,0.38,c.x);
+        vec2 c=p-vec2(0.50+offset*0.40,-0.10);
+        float radius=mix(0.70,1.42,clamp(len,0.0,1.5)/1.5);
+        float arc=gaussian(abs(length(c*vec2(1.0,0.88))-radius),width*0.74,uSoftness);
+        pattern=arc*smoothstep(-0.46,0.38,c.x);
       }else if(uLightType==3){
-        pattern=stripLight(p,offset-width*1.55,width*0.42,len,uSoftness)
-               +stripLight(p,offset+width*1.55,width*0.42,len,uSoftness);
+        pattern=stripLight(p,offset-width*1.55,width*0.44,len,uSoftness)
+               +stripLight(p,offset+width*1.55,width*0.44,len,uSoftness);
       }else if(uLightType==4){
         pattern=spotLight(p,vec2(offset,-0.10),vec2(width*2.2,width*1.75),uSoftness);
       }else if(uLightType==5){
-        float hemi=clamp(dot(n,normalize(vec3(-0.45,-0.30,0.84))),0.0,1.0);
+        float hemi=clamp(dot(n,normalize(vec3(-0.46,-0.30,0.84))),0.0,1.0);
         pattern=pow(hemi,mix(3.0,0.55,uSoftness))*0.85;
-      }else if(uLightType==6||uLightType==7){
-        vec2 ellipse=(p-vec2(0.06+offset*0.22,-0.05))/vec2(0.92,1.06);
-        float er=length(ellipse);
-        float segment=smoothstep(-0.12,0.34,p.x)*smoothstep(0.78,-0.82,p.y);
-        float outerArc=gaussian(abs(er-0.84),width*0.78,uSoftness)*segment;
-        float innerArc=gaussian(abs(er-0.73),width*0.42,mix(0.15,0.75,uSoftness))*segment*0.58;
-        float taper=smoothstep(0.02,0.62,p.x)*smoothstep(0.90,-0.35,p.y);
-        float crescent=(outerArc+innerArc)*mix(0.72,1.28,taper);
-        float topSpot=spotLight(p,vec2(-0.05,-0.48),vec2(width*1.65,width*1.38),mix(0.38,0.86,uSoftness));
-        float leftSpot=spotLight(p,vec2(-0.84,-0.03),vec2(width*1.08,width*1.80),uSoftness)*0.64;
-        float lowerSpot=spotLight(p,vec2(-0.50,0.72),vec2(width*2.10,width*1.40),uSoftness)*0.72;
-        float lowerPanel=spotLight(p,vec2(0.34,0.80),vec2(width*3.60,width*1.35),mix(0.55,0.92,uSoftness))*0.34;
-        pattern=crescent*1.18+topSpot+leftSpot+lowerSpot+lowerPanel;
+      }else if(uLightType==6 || uLightType==7){
+        vec2 arcP=p;
+        arcP.x += (0.14 + width*0.20)*(1.0-clamp(abs(p.y),0.0,1.0));
+        vec2 c1=(arcP-vec2(0.52+offset*0.26,0.02))*vec2(0.98,0.80);
+        vec2 c2=(arcP-vec2(0.56+offset*0.24,0.04))*vec2(1.00,0.84);
+        float arc1=gaussian(abs(length(c1)-0.92),width*1.22,mix(0.15,0.68,uSoftness));
+        float arc2=gaussian(abs(length(c2)-0.80),width*0.70,mix(0.06,0.42,uSoftness));
+        float arcMask=smoothstep(-0.18,0.72,p.x)*smoothstep(0.96,-0.58,p.y);
+        float crescent=(arc1*1.45 + arc2*0.95)*arcMask;
+        float topSpot=spotLight(p,vec2(-0.02,-0.42),vec2(width*1.92,width*1.50),mix(0.22,0.72,uSoftness))*1.18;
+        float leftSpot=spotLight(p,vec2(-0.83,-0.03),vec2(width*1.18,width*1.98),uSoftness)*0.86;
+        float lowerSpot=spotLight(p,vec2(-0.45,0.76),vec2(width*1.90,width*1.18),mix(0.34,0.80,uSoftness))*0.86;
+        float lowerSweep=stripLight(rotate2d(0.14)*p,0.62,width*2.2,max(0.30,len*0.74),mix(0.46,0.96,uSoftness))*0.28;
+        pattern=crescent+topSpot+leftSpot+lowerSpot+lowerSweep;
+        if(uLightType==7){
+          float echo=gaussian(abs(length((arcP-vec2(0.50+offset*0.26,0.00))*vec2(0.95,0.78))-0.88),width*1.55,mix(0.28,0.78,uSoftness))*arcMask;
+          pattern+=echo*0.42;
+        }
       }
       return pattern;
     }
@@ -393,51 +399,56 @@
       float mask=1.0-smoothstep(-aa,aa,d);
       float radial=clamp(length(q),0.0,1.0);
       float r2=min(dot(q,q),0.9995);
-      float domeBase=max(0.001,1.0-r2);
-      float profileExp=mix(0.48,1.75,uProfile);
+      float domeBase=max(0.0004,1.0-r2);
+      float domeStrength=pow(uConvexity,1.28);
+      float profileExp=mix(0.26,2.60,uProfile);
       float lens=pow(domeBase,profileExp);
-      float slope=2.0*profileExp*pow(domeBase,max(-0.48,profileExp-1.0));
-      slope=min(slope,14.0)*mix(0.05,2.75,pow(uConvexity,1.18));
+      float slope=2.0*profileExp*pow(domeBase,max(-0.72,profileExp-1.0));
+      slope=min(slope,28.0)*(0.12+5.40*domeStrength);
       vec3 n=normalize(vec3(q*slope,1.0));
 
-      float warp=uRefraction*uConvexity*lens;
+      float warp=uRefraction*(0.25+0.95*domeStrength)*lens;
       vec3 viewRay=vec3(0.0,0.0,-1.0);
       vec3 reflected=reflect(viewRay,n);
-      vec2 env=reflected.xy/max(0.18,1.0+reflected.z)*1.20;
-      vec2 reflectionCoord=(uLightType==6||uLightType==7)?q:env;
-      vec2 chromaOffset=normalize(reflectionCoord+vec2(0.001))*uAberration*3.8;
+      vec2 env=reflected.xy/max(0.14,1.0+reflected.z)*1.34;
+      vec2 reflectionCoord=(uLightType==6||uLightType==7)?(q*0.92+env*0.25):env;
+      vec2 chromaOffset=normalize(reflectionCoord+vec2(0.001))*uAberration*4.8;
       float patternR=reflectionPattern(reflectionCoord+chromaOffset,n);
       float patternG=reflectionPattern(reflectionCoord,n);
       float patternB=reflectionPattern(reflectionCoord-chromaOffset,n);
       vec3 patternRGB=vec3(patternR,patternG,patternB);
-      vec3 reflectionRGB=clamp(patternRGB*0.84*uReflection,0.0,3.0)*uReflectionColor;
+
+      float viewCos=clamp(n.z,0.0,1.0);
+      float fresnel=0.02+0.98*pow(1.0-viewCos,mix(6.8,2.0,uEdgeSoftness));
+      float reflectionBoost=(0.78+1.10*fresnel+0.55*domeStrength);
+      vec3 reflectionRGB=clamp(patternRGB*uReflection*reflectionBoost,0.0,4.0)*uReflectionColor;
       float reflection=max(reflectionRGB.r,max(reflectionRGB.g,reflectionRGB.b));
 
       vec3 light=normalize(vec3(cos(uLightAngle)*cos(uLightElevation),sin(uLightAngle)*cos(uLightElevation),sin(uLightElevation)));
-      float edgeStart=max(0.0,1.0-uEdgeThickness*2.15);
-      float edgeZone=smoothstep(edgeStart,1.0,radial);
-      float viewCos=clamp(n.z,0.0,1.0);
-      float fresnel=0.04+0.96*pow(1.0-viewCos,5.0);
       vec2 edgeNormal=normalize(q+vec2(0.00001));
       float edgeFacing=dot(edgeNormal,normalize(light.xy+vec2(0.0001)));
-      float brightEdge=edgeZone*fresnel*mix(0.22,1.0,edgeFacing*0.5+0.5)*uEdgeLight;
-      float darkEdge=edgeZone*pow(clamp(-edgeFacing*0.5+0.5,0.0,1.0),1.25)*uShadow*uRimBalance;
-      float pathLength=clamp((1.0/max(0.13,viewCos)-1.0)/4.8,0.0,1.0);
-      float innerShadow=pathLength*uShadow*(0.34+0.66*uRimBalance);
+      float rimOuter=smoothstep(max(0.14,1.0-uEdgeThickness*2.65),1.0,radial);
+      float rimInner=smoothstep(max(0.06,1.0-uEdgeThickness*4.90-uShadowSoftness*0.9),max(0.18,1.0-uEdgeThickness*1.55),radial);
+      float rimEdge=smoothstep(max(0.20,1.0-uEdgeThickness*1.20),1.0,radial);
+      float brightEdge=(rimOuter*0.52+rimEdge*0.48)*fresnel*mix(0.28,1.12,edgeFacing*0.5+0.5)*uEdgeLight*(0.60+0.80*domeStrength);
+      float darkEdge=rimInner*pow(clamp(-edgeFacing*0.5+0.5,0.0,1.0),1.12)*uShadow*(0.55+0.60*uRimBalance);
+      float pathLength=clamp((1.0/max(0.11,viewCos)-1.0)/3.1,0.0,1.0);
+      float centerShadow=(1.0-lens)*(0.08+0.26*uDepth)*(0.35+0.65*domeStrength);
+      float innerShadow=pathLength*uShadow*(0.26+0.74*uRimBalance)+rimInner*uShadow*0.22+centerShadow;
 
       vec3 keyDirection=normalize(vec3(-0.48,-0.36,0.80));
       float domeKey=dot(n,keyDirection)*0.5+0.5;
-      float domeShade=(domeKey-0.52)*uDepth*0.25;
-      float centerFalloff=pow(lens,0.62);
+      float domeShade=(domeKey-0.50)*uDepth*0.34;
+      float bodyGlow=(0.18+0.52*lens)*uDepth*(0.10+0.20*domeStrength);
       float noise=hash21(gl_FragCoord.xy+uSeed);
-      float spark=step(0.994+uSparkle*0.004,noise)*uSparkle*2.0;
+      float spark=step(0.996-uSparkle*0.0016,noise)*uSparkle*1.55;
 
-      float baseAlpha=clamp(mask*(uGlassOpacity*0.36+uTintAmount*(0.08+0.48*pathLength)+uHaze*0.10),0.0,0.36);
-      float negativeEffect=darkEdge+innerShadow+max(0.0,-domeShade)*0.55+centerFalloff*uShadow*0.16;
-      negativeEffect+=max(0.0,(0.5-noise)*uGrain);
-      float shadowAlpha=clamp(mask*negativeEffect*0.65,0.0,0.58);
-      float highlightAlpha=clamp(mask*(reflection*0.46+brightEdge*0.33+spark*0.72),0.0,0.93);
-      vec3 baseColor=clamp(uTint*0.70+vec3(0.015,0.015,0.012),0.0,1.0);
+      float baseAlpha=clamp(mask*(uGlassOpacity*0.52+uTintAmount*(0.16+0.76*pathLength)+uHaze*(0.18+0.16*lens)+rimOuter*0.05),0.0,0.74);
+      float negativeEffect=darkEdge+innerShadow+max(0.0,-domeShade)*0.76;
+      negativeEffect+=max(0.0,(0.52-noise)*uGrain)*0.65;
+      float shadowAlpha=clamp(mask*negativeEffect*0.82,0.0,0.76);
+      float highlightAlpha=clamp(mask*(reflection*0.72+brightEdge*0.56+spark*0.82),0.0,0.985);
+      vec3 baseColor=clamp(uTint*(0.72+0.12*lens)+vec3(bodyGlow)+vec3(0.012,0.012,0.010),0.0,1.0);
       vec3 shadowColor=vec3(0.0);
       vec3 highlightEffect=reflectionRGB+uReflectionColor*(brightEdge+spark);
       float highlightStrength=max(highlightEffect.r,max(highlightEffect.g,highlightEffect.b));
@@ -498,10 +509,10 @@
 
   const defaults={
     shape:0,glassX:50,glassY:50,glassW:92,glassH:92,roundness:42,lockRatio:true,
-    convexity:58,profile:105,refraction:30,edgeThickness:42,depth:38,aberration:10,blur:4,saturation:108,contrast:108,
-    tintColor:'#b9d7ff',tintAmount:9,glassOpacity:16,
-    lightType:0,reflection:82,lightAngle:322,lightElevation:52,lightOffset:-22,lightWidth:23,lightLength:88,softness:52,reflectionColor:'#ffffff',
-    edgeLight:92,edgeSoftness:28,rimBalance:57,shadow:25,shadowSoftness:44,haze:3,grain:2,sparkle:4,
+    convexity:82,profile:86,refraction:42,edgeThickness:68,depth:64,aberration:12,blur:4,saturation:108,contrast:108,
+    tintColor:'#ddd8bb',tintAmount:14,glassOpacity:24,
+    lightType:6,reflection:126,lightAngle:322,lightElevation:58,lightOffset:14,lightWidth:24,lightLength:112,softness:24,reflectionColor:'#fffef5',
+    edgeLight:148,edgeSoftness:24,rimBalance:64,shadow:46,shadowSoftness:54,haze:6,grain:2,sparkle:3,
     showBackground:true,imageScaleX:1,imageScaleY:1,imageOffsetX:0,imageOffsetY:0
   };
   let state={...defaults};
@@ -555,35 +566,35 @@
     gl.uniform2f(U.uSize,pct(state.glassW),pct(state.glassH));
     gl.uniform1f(U.uRoundness,pct(state.roundness));
     gl.uniform1i(U.uShape,Number(state.shape));
-    gl.uniform1f(U.uConvexity,pct(state.convexity)*0.98);
-    gl.uniform1f(U.uProfile,(Number(state.profile)-10)/240);
-    gl.uniform1f(U.uRefraction,Number(state.refraction)/460);
-    gl.uniform1f(U.uEdgeThickness,0.01+pct(state.edgeThickness)*0.22);
-    gl.uniform1f(U.uDepth,pct(state.depth));
-    gl.uniform1f(U.uAberration,pct(state.aberration)*0.006);
+    gl.uniform1f(U.uConvexity,0.04+pow(pct(state.convexity),1.12)*1.08);
+    gl.uniform1f(U.uProfile,pow((Number(state.profile)-10)/240,0.92));
+    gl.uniform1f(U.uRefraction,Number(state.refraction)/280);
+    gl.uniform1f(U.uEdgeThickness,0.02+pct(state.edgeThickness)*0.30);
+    gl.uniform1f(U.uDepth,0.02+pow(pct(state.depth),0.96));
+    gl.uniform1f(U.uAberration,pct(state.aberration)*0.008);
     gl.uniform1f(U.uBlur,pct(state.blur)*4.0);
     gl.uniform1f(U.uSaturation,Number(state.saturation)/100);
     gl.uniform1f(U.uContrast,Number(state.contrast)/100);
     gl.uniform3fv(U.uTint,hexToRgb(state.tintColor));
-    gl.uniform1f(U.uTintAmount,pct(state.tintAmount)*0.42);
-    gl.uniform1f(U.uGlassOpacity,pct(state.glassOpacity)*0.30);
+    gl.uniform1f(U.uTintAmount,pct(state.tintAmount)*0.58);
+    gl.uniform1f(U.uGlassOpacity,pct(state.glassOpacity)*0.42);
     gl.uniform1i(U.uLightType,Number(state.lightType));
-    gl.uniform1f(U.uReflection,Number(state.reflection)/100);
+    gl.uniform1f(U.uReflection,Number(state.reflection)/78);
     gl.uniform1f(U.uLightAngle,rad(state.lightAngle));
     gl.uniform1f(U.uLightElevation,rad(state.lightElevation));
     gl.uniform1f(U.uLightOffset,Number(state.lightOffset)/115);
-    gl.uniform1f(U.uLightWidth,0.015+pct(state.lightWidth)*0.32);
+    gl.uniform1f(U.uLightWidth,0.014+pct(state.lightWidth)*0.38);
     gl.uniform1f(U.uLightLength,Number(state.lightLength)/100);
     gl.uniform1f(U.uSoftness,pct(state.softness));
     gl.uniform3fv(U.uReflectionColor,hexToRgb(state.reflectionColor));
-    gl.uniform1f(U.uEdgeLight,Number(state.edgeLight)/130);
+    gl.uniform1f(U.uEdgeLight,Number(state.edgeLight)/92);
     gl.uniform1f(U.uEdgeSoftness,pct(state.edgeSoftness));
     gl.uniform1f(U.uRimBalance,pct(state.rimBalance));
-    gl.uniform1f(U.uShadow,pct(state.shadow)*0.65);
-    gl.uniform1f(U.uShadowSoftness,0.008+pct(state.shadowSoftness)*0.2);
-    gl.uniform1f(U.uHaze,pct(state.haze)*0.12);
-    gl.uniform1f(U.uGrain,pct(state.grain)*0.08);
-    gl.uniform1f(U.uSparkle,pct(state.sparkle));
+    gl.uniform1f(U.uShadow,pct(state.shadow)*0.95);
+    gl.uniform1f(U.uShadowSoftness,0.02+pct(state.shadowSoftness)*0.34);
+    gl.uniform1f(U.uHaze,pct(state.haze)*0.20);
+    gl.uniform1f(U.uGrain,pct(state.grain)*0.14);
+    gl.uniform1f(U.uSparkle,pct(state.sparkle)*1.15);
     gl.uniform1i(U.uShowBackground,showBackground);
     gl.uniform1i(U.uRenderMode,renderMode);
     gl.uniform1f(U.uSeed,17.123);
@@ -649,16 +660,15 @@
   document.getElementById('resetButton').onclick=()=>{state={...defaults};syncUI();setStatus('Instellingen hersteld','De geladen afbeelding blijft behouden.')};
 
   const presets={
-    clear:{convexity:38,profile:125,refraction:18,edgeThickness:30,depth:20,aberration:3,blur:1,tintAmount:3,glassOpacity:7,reflection:46,lightType:1,lightWidth:35,softness:72,edgeLight:55,shadow:10,haze:1,grain:0,sparkle:1,tintColor:'#d8ecff'},
-    domed:{convexity:92,profile:72,refraction:68,edgeThickness:76,depth:68,aberration:18,blur:4,tintAmount:8,glassOpacity:17,reflection:105,lightType:2,lightWidth:20,softness:40,edgeLight:145,shadow:42,haze:2,grain:1,sparkle:5},
-    sapphire:{convexity:58,profile:112,refraction:34,edgeThickness:48,depth:48,aberration:10,blur:2,tintColor:'#75bfff',tintAmount:18,glassOpacity:10,reflectionColor:'#c9ecff',reflection:75,lightType:0,edgeLight:105,shadow:22,haze:1,grain:0,sparkle:3},
-    studio:{convexity:55,profile:110,refraction:28,edgeThickness:43,depth:35,tintAmount:7,glassOpacity:13,reflection:132,lightType:3,lightWidth:17,lightLength:104,softness:28,lightOffset:-14,edgeLight:88,shadow:21,sparkle:7},
-    vintage:{convexity:76,profile:65,refraction:52,edgeThickness:72,depth:61,aberration:34,blur:10,tintColor:'#ffe5b1',tintAmount:17,glassOpacity:22,reflectionColor:'#fff2d1',reflection:61,lightType:2,edgeLight:118,shadow:39,haze:12,grain:12,sparkle:2},
-    smoked:{convexity:48,profile:130,refraction:24,edgeThickness:45,depth:44,aberration:7,blur:3,tintColor:'#6f7b8b',tintAmount:43,glassOpacity:28,reflectionColor:'#d8e1ed',reflection:48,lightType:5,edgeLight:75,shadow:48,haze:6,grain:2,sparkle:1},
-    amberDome:{shape:0,convexity:100,profile:42,refraction:18,edgeThickness:86,depth:92,aberration:3,blur:3,saturation:92,contrast:100,tintColor:'#8d8018',tintAmount:25,glassOpacity:10,lightType:6,reflection:88,lightAngle:0,lightElevation:58,lightOffset:4,lightWidth:20,lightLength:108,softness:46,reflectionColor:'#fff9d2',edgeLight:132,edgeSoftness:20,rimBalance:54,shadow:52,shadowSoftness:48,haze:10,grain:14,sparkle:3},
-    prismaticDome:{shape:0,convexity:100,profile:45,refraction:28,edgeThickness:82,depth:86,aberration:88,blur:2,saturation:108,contrast:104,tintColor:'#607386',tintAmount:8,glassOpacity:7,lightType:7,reflection:92,lightAngle:0,lightElevation:60,lightOffset:4,lightWidth:19,lightLength:108,softness:42,reflectionColor:'#ffffff',edgeLight:140,edgeSoftness:18,rimBalance:56,shadow:48,shadowSoftness:44,haze:8,grain:12,sparkle:3}
-  };
-  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{Object.assign(state,presets[b.dataset.preset]);syncUI();setStatus('Stijl toegepast',b.textContent)});
+    luxuryDome:{shape:0,convexity:92,profile:76,refraction:42,edgeThickness:78,depth:72,aberration:6,blur:3,tintColor:'#ddd7bf',tintAmount:16,glassOpacity:24,lightType:6,reflection:132,lightAngle:322,lightElevation:60,lightOffset:16,lightWidth:24,lightLength:116,softness:22,reflectionColor:'#fffdf1',edgeLight:158,edgeSoftness:24,rimBalance:68,shadow:50,shadowSoftness:56,haze:6,grain:1,sparkle:3},
+    watchSapphire:{shape:0,convexity:86,profile:84,refraction:38,edgeThickness:70,depth:64,aberration:18,blur:2,tintColor:'#c9d8ea',tintAmount:12,glassOpacity:20,lightType:6,reflection:124,lightAngle:320,lightElevation:58,lightOffset:12,lightWidth:22,lightLength:110,softness:20,reflectionColor:'#fbffff',edgeLight:148,edgeSoftness:22,rimBalance:62,shadow:42,shadowSoftness:50,haze:4,grain:1,sparkle:2},
+    warmAcrylic:{shape:0,convexity:94,profile:66,refraction:46,edgeThickness:82,depth:78,aberration:10,blur:6,tintColor:'#e7d884',tintAmount:24,glassOpacity:28,lightType:6,reflection:118,lightAngle:323,lightElevation:60,lightOffset:18,lightWidth:26,lightLength:118,softness:28,reflectionColor:'#fff7d8',edgeLight:160,edgeSoftness:28,rimBalance:70,shadow:56,shadowSoftness:60,haze:10,grain:3,sparkle:2},
+    studioCrystal:{shape:0,convexity:82,profile:92,refraction:34,edgeThickness:68,depth:60,aberration:8,blur:2,tintColor:'#e6e5de',tintAmount:8,glassOpacity:18,lightType:3,reflection:156,lightAngle:318,lightElevation:56,lightOffset:10,lightWidth:18,lightLength:126,softness:14,reflectionColor:'#ffffff',edgeLight:138,edgeSoftness:18,rimBalance:56,shadow:38,shadowSoftness:44,haze:3,grain:1,sparkle:4},
+    amberDome:{shape:0,convexity:98,profile:64,refraction:40,edgeThickness:84,depth:82,aberration:6,blur:5,saturation:84,contrast:92,tintColor:'#dcc834',tintAmount:42,glassOpacity:34,lightType:6,reflection:138,lightAngle:320,lightElevation:60,lightOffset:18,lightWidth:26,lightLength:118,softness:24,reflectionColor:'#fff7ce',edgeLight:170,edgeSoftness:28,rimBalance:68,shadow:54,shadowSoftness:58,haze:14,grain:6,sparkle:2},
+    prismaticDome:{shape:0,convexity:94,profile:74,refraction:52,edgeThickness:76,depth:74,aberration:84,blur:2,saturation:100,contrast:104,tintColor:'#d3dde7',tintAmount:10,glassOpacity:18,lightType:7,reflection:136,lightAngle:321,lightElevation:60,lightOffset:16,lightWidth:22,lightLength:114,softness:18,reflectionColor:'#ffffff',edgeLight:154,edgeSoftness:22,rimBalance:64,shadow:44,shadowSoftness:52,haze:7,grain:2,sparkle:2},
+    smokedBlack:{shape:0,convexity:88,profile:84,refraction:34,edgeThickness:74,depth:74,aberration:8,blur:3,tintColor:'#7d7a68',tintAmount:26,glassOpacity:30,lightType:6,reflection:124,lightAngle:322,lightElevation:60,lightOffset:14,lightWidth:24,lightLength:112,softness:20,reflectionColor:'#fffbed',edgeLight:150,edgeSoftness:22,rimBalance:68,shadow:62,shadowSoftness:56,haze:8,grain:2,sparkle:2},
+    clearMineral:{shape:0,convexity:74,profile:98,refraction:28,edgeThickness:56,depth:50,aberration:4,blur:1,tintColor:'#dde5ef',tintAmount:6,glassOpacity:14,lightType:6,reflection:104,lightAngle:320,lightElevation:56,lightOffset:10,lightWidth:20,lightLength:104,softness:26,reflectionColor:'#ffffff',edgeLight:122,edgeSoftness:26,rimBalance:54,shadow:30,shadowSoftness:40,haze:2,grain:0,sparkle:1}
+  };  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{Object.assign(state,presets[b.dataset.preset]);syncUI();setStatus('Stijl toegepast',b.textContent)});
 
   function setStatus(title,text,error=false){
     const s=document.getElementById('status');s.innerHTML=`<strong style="${error?'color:var(--danger)':''}">${title}.</strong> ${text}`;
