@@ -201,14 +201,15 @@
         <div class="control"><label for="exportSize">PNG formaat</label><select id="exportSize"><option value="320">320 × 320</option><option value="640">640 × 640</option><option value="1024" selected>1024 × 1024</option><option value="2048">2048 × 2048</option><option value="4096">4096 × 4096</option></select></div>
         <label class="check"><input id="cropToGlass" type="checkbox"> Bijsnijden tot glasvorm</label>
         <div class="exportGrid">
-          <button id="exportGlass" class="primary">Transparant glas PNG</button>
+          <button id="exportGlass" class="primary">Glas PNG exact als preview</button>
+          <button id="exportOverlay">Alleen overlay PNG</button>
           <button id="exportComposite">Preview met afbeelding PNG</button>
           <button id="exportMap">Lens displacement map PNG</button>
           <button id="savePreset">Instellingen opslaan JSON</button>
           <label class="fileButton" for="presetInput">Instellingen laden</label>
           <input id="presetInput" type="file" accept="application/json,.json">
         </div>
-        <p class="note">De transparante PNG bevat uitsluitend tint, reflectie, randlicht, glasdiepte en oppervlak. Beeldbreking vervormt pixels van de referentie en kan daarom alleen zichtbaar blijven in een samengestelde afbeelding of als displacement map.</p>
+        <p class="note">De eerste glasexport bakt de lenswerking, verzadiging, contrastcorrectie en vervormde referentie visueel mee in een transparante glaslaag. Daardoor sluit die veel beter aan op de preview wanneer je dezelfde basis later weer onder het glas gebruikt. De overlay export bevat alleen tint, reflectie, randlicht, glasdiepte en oppervlak.</p>
       </div>
     </details>
 
@@ -417,12 +418,25 @@
         return;
       }
 
+      if(uRenderMode==3){
+        float bakedAlpha=mask;
+        vec3 bakedPremul=max(vec3(0.0),glassColor)*bakedAlpha;
+        gl_FragColor=vec4(bakedPremul,bakedAlpha);
+        return;
+      }
+
+      if(uRenderMode==4){
+        vec3 overlayPremul=max(vec3(0.0),overlay)*overlayAlpha;
+        gl_FragColor=vec4(overlayPremul,overlayAlpha);
+        return;
+      }
+
       if(uShowBackground==1){
         vec3 result=mix(bg,glassColor,mask);
         gl_FragColor=vec4(result,1.0);
       }else{
-        vec3 premul=max(vec3(0.0),overlay)*overlayAlpha;
-        gl_FragColor=vec4(premul,overlayAlpha);
+        vec3 overlayPremul=max(vec3(0.0),overlay)*overlayAlpha;
+        gl_FragColor=vec4(overlayPremul,overlayAlpha);
       }
     }
   `;
@@ -652,7 +666,8 @@
       canvas.width=oldW;canvas.height=oldH;render();
     },'image/png');
   }
-  document.getElementById('exportGlass').onclick=()=>renderExport(0,0,'jives-glass-transparent.png');
+  document.getElementById('exportGlass').onclick=()=>renderExport(0,3,'jives-glass-preview-matched.png');
+  document.getElementById('exportOverlay').onclick=()=>renderExport(0,4,'jives-glass-overlay-only.png');
   document.getElementById('exportComposite').onclick=()=>renderExport(1,0,'jives-glass-preview.png');
   document.getElementById('exportMap').onclick=()=>renderExport(0,2,'jives-glass-displacement-map.png');
   document.getElementById('savePreset').onclick=()=>{
