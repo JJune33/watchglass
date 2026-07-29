@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JIVES Glass Lab</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg:#090b10;
+    --panel:#11151d;
+    --panel2:#171c26;
+    --line:#2a3242;
+    --text:#eef3ff;
+    --muted:#9aa6bc;
+    --accent:#89a9ff;
+    --danger:#ff8b8b;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:14px/1.35 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  button,input,select{font:inherit}
+  button,select,input[type="color"]{color:var(--text);background:#151b26;border:1px solid var(--line);border-radius:9px}
+  button{padding:9px 12px;cursor:pointer;transition:.15s ease}
+  button:hover{border-color:#586986;background:#1a2230}
+  button.primary{background:#dce6ff;color:#0c1423;border-color:#dce6ff;font-weight:750}
+  button.danger{color:#ffd5d5}
+  .app{display:grid;grid-template-columns:330px minmax(380px,1fr) 330px;min-height:100vh}
+  .sidebar{background:var(--panel);border-right:1px solid var(--line);padding:16px;overflow:auto;max-height:100vh}
+  .sidebar.right{border-right:0;border-left:1px solid var(--line)}
+  .brand{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .brand h1{font-size:17px;letter-spacing:.08em;margin:0}
+  .brand small{color:var(--muted)}
+  .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .toolbar .wide{grid-column:1/-1}
+  input[type="file"]{display:none}
+  .fileButton{display:flex;justify-content:center;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#151b26;cursor:pointer;font-weight:650}
+  .fileButton:hover{border-color:#586986;background:#1a2230}
+  details{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel2);margin:10px 0;overflow:hidden}
+  summary{list-style:none;padding:12px 13px;cursor:pointer;font-weight:750;display:flex;justify-content:space-between;align-items:center}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";color:var(--muted);font-size:16px}
+  details[open] summary::after{content:"−"}
+  .section{padding:0 13px 13px}
+  .control{display:grid;grid-template-columns:1fr auto;gap:5px 10px;align-items:center;margin:10px 0}
+  .control label{color:#dce4f6}
+  .control output{font-variant-numeric:tabular-nums;color:var(--muted);min-width:54px;text-align:right}
+  .control input[type="range"]{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+  .control select{grid-column:1/-1;width:100%;padding:8px}
+  .control .inline{grid-column:1/-1;display:flex;gap:8px;align-items:center}
+  .control input[type="color"]{width:48px;height:34px;padding:3px}
+  .control input[type="number"],.control input[type="text"]{width:100%;background:#101620;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px}
+  .check{display:flex;gap:8px;align-items:center;margin:10px 0;color:#dce4f6}
+  .check input{accent-color:var(--accent)}
+  .stageWrap{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;min-height:100vh;background:
+    radial-gradient(circle at 50% 35%,#222a38 0,#11151d 42%,#090b10 75%)}
+  .stageColumn{width:min(82vh,calc(100vw - 700px));min-width:360px;max-width:900px;padding:20px}
+  .stageHeader{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px;color:var(--muted)}
+  .canvasShell{position:relative;aspect-ratio:1;border:1px solid #374157;border-radius:16px;overflow:hidden;box-shadow:0 30px 80px #0008;background-color:#ccd2dc;background-image:linear-gradient(45deg,#aeb7c5 25%,transparent 25%),linear-gradient(-45deg,#aeb7c5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#aeb7c5 75%),linear-gradient(-45deg,transparent 75%,#aeb7c5 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
+  canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+  canvas.dragging{cursor:grabbing}
+  .hint{color:var(--muted);font-size:12px;margin-top:9px;text-align:center}
+  .status{padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#0d121b;color:var(--muted);margin:10px 0;font-size:12px}
+  .status strong{color:#e6edff}
+  .exportGrid{display:grid;grid-template-columns:1fr;gap:8px}
+  .note{font-size:12px;color:var(--muted);border-left:2px solid #526582;padding-left:10px;margin:10px 0}
+  .presetGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .presetGrid button{padding:8px;font-size:12px}
+  .miniRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:99px;border:1px solid var(--line);background:#101620;color:var(--muted);font-size:11px}
+  .dot{width:7px;height:7px;border-radius:50%;background:#81ffa8;box-shadow:0 0 8px #81ffa8}
+  .unsupported{display:none;padding:18px;background:#2b1618;color:#ffd8d8;border:1px solid #784248;border-radius:12px;margin:20px}
+  @media(max-width:1120px){
+    .app{grid-template-columns:300px 1fr}
+    .sidebar.right{grid-column:1/-1;max-height:none;border-left:0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .sidebar.right>.brand,.sidebar.right>.status{grid-column:1/-1}
+    .stageColumn{width:min(76vh,calc(100vw - 330px))}
+  }
+  @media(max-width:760px){
+    .app{display:block}
+    .sidebar{max-height:none;border-right:0;border-bottom:1px solid var(--line)}
+    .stageWrap{min-height:auto}
+    .stageColumn{width:100%;min-width:0;padding:12px}
+    .sidebar.right{display:block}
+  }
+</style>
+</head>
+<body>
+<div id="unsupported" class="unsupported">Deze browser ondersteunt WebGL niet. Gebruik een recente versie van Safari, Chrome, Edge of Firefox.</div>
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="brand"><div><h1>JIVES GLASS LAB</h1><small>Optical crystal builder</small></div><span class="badge"><span class="dot"></span>live</span></div>
+    <div class="toolbar">
+      <label class="fileButton wide" for="imageInput">Watch image laden</label>
+      <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp">
+      <button id="fitButton">Afbeelding passend</button>
+      <button id="centerButton">Glas centreren</button>
+      <button id="toggleBackground">Referentie verbergen</button>
+      <button id="resetButton" class="danger">Reset</button>
+    </div>
+
+    <details open>
+      <summary>Glasvorm en positie</summary>
+      <div class="section">
+        <div class="control"><label for="shape">Vorm</label><select id="shape"><option value="0">Rond kristal</option><option value="1">Afgeronde rechthoek</option><option value="2">Squircle</option></select></div>
+        <div class="control"><label for="glassX">Horizontale positie</label><output data-for="glassX"></output><input id="glassX" type="range" min="0" max="100" step="0.1" value="50"></div>
+        <div class="control"><label for="glassY">Verticale positie</label><output data-for="glassY"></output><input id="glassY" type="range" min="0" max="100" step="0.1" value="50"></div>
+        <div class="control"><label for="glassW">Breedte</label><output data-for="glassW"></output><input id="glassW" type="range" min="10" max="110" step="0.1" value="92"></div>
+        <div class="control"><label for="glassH">Hoogte</label><output data-for="glassH"></output><input id="glassH" type="range" min="10" max="110" step="0.1" value="92"></div>
+        <div class="control"><label for="roundness">Hoekafronding</label><output data-for="roundness"></output><input id="roundness" type="range" min="0" max="100" step="1" value="42"></div>
+        <label class="check"><input id="lockRatio" type="checkbox" checked> Breedte en hoogte koppelen</label>
+      </div>
+    </details>
+
+    <details open>
+      <summary>Bolling en lenswerking</summary>
+      <div class="section">
+        <div class="control"><label for="convexity">Bolling</label><output data-for="convexity"></output><input id="convexity" type="range" min="0" max="100" step="1" value="58"></div>
+        <div class="control"><label for="profile">Bollingsprofiel</label><output data-for="profile"></output><input id="profile" type="range" min="10" max="250" step="1" value="105"></div>
+        <div class="control"><label for="refraction">Beeldbreking</label><output data-for="refraction"></output><input id="refraction" type="range" min="-100" max="100" step="1" value="30"></div>
+        <div class="control"><label for="edgeThickness">Optische randdikte</label><output data-for="edgeThickness"></output><input id="edgeThickness" type="range" min="0" max="100" step="1" value="42"></div>
+        <div class="control"><label for="depth">Glasdiepte</label><output data-for="depth"></output><input id="depth" type="range" min="0" max="100" step="1" value="38"></div>
+        <div class="control"><label for="aberration">Kleursplitsing</label><output data-for="aberration"></output><input id="aberration" type="range" min="0" max="100" step="1" value="10"></div>
+        <div class="control"><label for="blur">Interne zachtheid</label><output data-for="blur"></output><input id="blur" type="range" min="0" max="100" step="1" value="4"></div>
+        <div class="control"><label for="saturation">Verzadiging onder glas</label><output data-for="saturation"></output><input id="saturation" type="range" min="0" max="200" step="1" value="108"></div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>Glaskleur en helderheid</summary>
+      <div class="section">
+        <div class="control"><label>Tintkleur</label><div class="inline"><input id="tintColor" type="color" value="#b9d7ff"><input id="tintHex" type="text" value="#b9d7ff" maxlength="7"></div></div>
+        <div class="control"><label for="tintAmount">Tintsterkte</label><output data-for="tintAmount"></output><input id="tintAmount" type="range" min="0" max="100" step="1" value="9"></div>
+        <div class="control"><label for="glassOpacity">Basiszichtbaarheid</label><output data-for="glassOpacity"></output><input id="glassOpacity" type="range" min="0" max="100" step="1" value="16"></div>
+        <div class="control"><label for="contrast">Optisch contrast</label><output data-for="contrast"></output><input id="contrast" type="range" min="50" max="170" step="1" value="108"></div>
+      </div>
+    </details>
+  </aside>
+
+  <main class="stageWrap">
+    <div class="stageColumn">
+      <div class="stageHeader"><span id="stageLabel">Preview met referentie</span><span id="sizeLabel">1024 × 1024 preview</span></div>
+      <div class="canvasShell"><canvas id="glCanvas" width="1024" height="1024"></canvas></div>
+      <div class="hint">Sleep het glas over de afbeelding. Shift + slepen verplaatst de lichtreflectie.</div>
+    </div>
+  </main>
+
+  <aside class="sidebar right">
+    <div class="brand"><div><h1>LICHT EN EXPORT</h1><small>Reflection studio</small></div></div>
+
+    <details open>
+      <summary>Reflectie</summary>
+      <div class="section">
+        <div class="control"><label for="lightType">Lichttype</label><select id="lightType"><option value="0">Studio strip</option><option value="1">Brede softbox</option><option value="2">Gebogen raamlicht</option><option value="3">Dubbele strip</option><option value="4">Puntglans</option><option value="5">Zachte hemel</option></select></div>
+        <div class="control"><label for="reflection">Reflectiesterkte</label><output data-for="reflection"></output><input id="reflection" type="range" min="0" max="200" step="1" value="82"></div>
+        <div class="control"><label for="lightAngle">Lichthoek</label><output data-for="lightAngle"></output><input id="lightAngle" type="range" min="0" max="360" step="1" value="322"></div>
+        <div class="control"><label for="lightElevation">Lichthoogte</label><output data-for="lightElevation"></output><input id="lightElevation" type="range" min="5" max="90" step="1" value="52"></div>
+        <div class="control"><label for="lightOffset">Reflectiepositie</label><output data-for="lightOffset"></output><input id="lightOffset" type="range" min="-100" max="100" step="1" value="-22"></div>
+        <div class="control"><label for="lightWidth">Reflectiebreedte</label><output data-for="lightWidth"></output><input id="lightWidth" type="range" min="1" max="100" step="1" value="23"></div>
+        <div class="control"><label for="lightLength">Reflectielengte</label><output data-for="lightLength"></output><input id="lightLength" type="range" min="5" max="150" step="1" value="88"></div>
+        <div class="control"><label for="softness">Zachtheid</label><output data-for="softness"></output><input id="softness" type="range" min="0" max="100" step="1" value="52"></div>
+        <div class="control"><label>Reflectiekleur</label><div class="inline"><input id="reflectionColor" type="color" value="#ffffff"><input id="reflectionHex" type="text" value="#ffffff" maxlength="7"></div></div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>Randlicht en schaduw</summary>
+      <div class="section">
+        <div class="control"><label for="edgeLight">Randlicht</label><output data-for="edgeLight"></output><input id="edgeLight" type="range" min="0" max="200" step="1" value="92"></div>
+        <div class="control"><label for="edgeSoftness">Randzachtheid</label><output data-for="edgeSoftness"></output><input id="edgeSoftness" type="range" min="1" max="100" step="1" value="28"></div>
+        <div class="control"><label for="rimBalance">Licht en donkerrand</label><output data-for="rimBalance"></output><input id="rimBalance" type="range" min="0" max="100" step="1" value="57"></div>
+        <div class="control"><label for="shadow">Interne schaduw</label><output data-for="shadow"></output><input id="shadow" type="range" min="0" max="100" step="1" value="25"></div>
+        <div class="control"><label for="shadowSoftness">Schaduwzachtheid</label><output data-for="shadowSoftness"></output><input id="shadowSoftness" type="range" min="1" max="100" step="1" value="44"></div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Oppervlak</summary>
+      <div class="section">
+        <div class="control"><label for="haze">Microhaze</label><output data-for="haze"></output><input id="haze" type="range" min="0" max="100" step="1" value="3"></div>
+        <div class="control"><label for="grain">Fijne structuur</label><output data-for="grain"></output><input id="grain" type="range" min="0" max="100" step="1" value="2"></div>
+        <div class="control"><label for="sparkle">Microglans</label><output data-for="sparkle"></output><input id="sparkle" type="range" min="0" max="100" step="1" value="4"></div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>Snelle stijlen</summary>
+      <div class="section presetGrid">
+        <button data-preset="clear">Helder mineraal</button>
+        <button data-preset="domed">Sterk bol</button>
+        <button data-preset="sapphire">Saffier blauw</button>
+        <button data-preset="studio">Studio glans</button>
+        <button data-preset="vintage">Vintage acryl</button>
+        <button data-preset="smoked">Smoked glass</button>
+      </div>
+    </details>
+
+    <details open>
+      <summary>Export</summary>
+      <div class="section">
+        <div class="control"><label for="exportSize">PNG formaat</label><select id="exportSize"><option value="320">320 × 320</option><option value="640">640 × 640</option><option value="1024" selected>1024 × 1024</option><option value="2048">2048 × 2048</option><option value="4096">4096 × 4096</option></select></div>
+        <label class="check"><input id="cropToGlass" type="checkbox"> Bijsnijden tot glasvorm</label>
+        <div class="exportGrid">
+          <button id="exportGlass" class="primary">Transparant glas PNG</button>
+          <button id="exportComposite">Preview met afbeelding PNG</button>
+          <button id="exportMap">Lens displacement map PNG</button>
+          <button id="savePreset">Instellingen opslaan JSON</button>
+          <label class="fileButton" for="presetInput">Instellingen laden</label>
+          <input id="presetInput" type="file" accept="application/json,.json">
+        </div>
+        <p class="note">De transparante PNG bevat uitsluitend tint, reflectie, randlicht, glasdiepte en oppervlak. Beeldbreking vervormt pixels van de referentie en kan daarom alleen zichtbaar blijven in een samengestelde afbeelding of als displacement map.</p>
+      </div>
+    </details>
+
+    <div class="status" id="status"><strong>Klaar.</strong> Laad een ontwerp of gebruik de ingebouwde testdial.</div>
+  </aside>
+</div>
+<script>
+(() => {
+  'use strict';
+  const canvas = document.getElementById('glCanvas');
+  const gl = canvas.getContext('webgl', {alpha:true, antialias:true, premultipliedAlpha:true, preserveDrawingBuffer:true});
+  if (!gl) {
+    document.getElementById('unsupported').style.display='block';
+    document.getElementById('app').style.display='none';
+    return;
+  }
+
+  const vertexSource = `
+    attribute vec2 aPosition;
+    varying vec2 vUv;
+    void main(){
+      vUv = aPosition * 0.5 + 0.5;
+      gl_Position = vec4(aPosition,0.0,1.0);
+    }
+  `;
+
+  const fragmentSource = `
+    precision highp float;
+    varying vec2 vUv;
+    uniform sampler2D uImage;
+    uniform vec2 uCenter;
+    uniform vec2 uSize;
+    uniform float uRoundness;
+    uniform int uShape;
+    uniform float uConvexity;
+    uniform float uProfile;
+    uniform float uRefraction;
+    uniform float uEdgeThickness;
+    uniform float uDepth;
+    uniform float uAberration;
+    uniform float uBlur;
+    uniform float uSaturation;
+    uniform float uContrast;
+    uniform vec3 uTint;
+    uniform float uTintAmount;
+    uniform float uGlassOpacity;
+    uniform int uLightType;
+    uniform float uReflection;
+    uniform float uLightAngle;
+    uniform float uLightElevation;
+    uniform float uLightOffset;
+    uniform float uLightWidth;
+    uniform float uLightLength;
+    uniform float uSoftness;
+    uniform vec3 uReflectionColor;
+    uniform float uEdgeLight;
+    uniform float uEdgeSoftness;
+    uniform float uRimBalance;
+    uniform float uShadow;
+    uniform float uShadowSoftness;
+    uniform float uHaze;
+    uniform float uGrain;
+    uniform float uSparkle;
+    uniform int uShowBackground;
+    uniform int uRenderMode;
+    uniform float uSeed;
+    uniform vec2 uImageScale;
+    uniform vec2 uImageOffset;
+
+    float hash21(vec2 p){
+      p = fract(p*vec2(123.34,456.21));
+      p += dot(p,p+45.32);
+      return fract(p.x*p.y);
+    }
+
+    float sdRoundBox(vec2 p, vec2 b, float r){
+      vec2 q=abs(p)-b+r;
+      return min(max(q.x,q.y),0.0)+length(max(q,0.0))-r;
+    }
+
+    float shapeDistance(vec2 q){
+      if(uShape==0) return length(q)-1.0;
+      if(uShape==2){
+        float n=mix(3.0,7.0,uRoundness);
+        return pow(pow(abs(q.x),n)+pow(abs(q.y),n),1.0/n)-1.0;
+      }
+      float r=mix(0.02,0.95,uRoundness);
+      return sdRoundBox(q,vec2(1.0),r);
+    }
+
+    vec2 imageUv(vec2 uv){
+      return (uv-uImageOffset)/uImageScale;
+    }
+
+    vec3 sampleImage(vec2 uv,float blurAmount){
+      vec2 tuv=imageUv(uv);
+      vec2 px=vec2(1.0/1024.0)*blurAmount;
+      vec3 c=texture2D(uImage,tuv).rgb*0.28;
+      c+=texture2D(uImage,tuv+vec2(px.x,0.0)).rgb*0.12;
+      c+=texture2D(uImage,tuv-vec2(px.x,0.0)).rgb*0.12;
+      c+=texture2D(uImage,tuv+vec2(0.0,px.y)).rgb*0.12;
+      c+=texture2D(uImage,tuv-vec2(0.0,px.y)).rgb*0.12;
+      c+=texture2D(uImage,tuv+px).rgb*0.06;
+      c+=texture2D(uImage,tuv-px).rgb*0.06;
+      c+=texture2D(uImage,tuv+vec2(px.x,-px.y)).rgb*0.06;
+      c+=texture2D(uImage,tuv+vec2(-px.x,px.y)).rgb*0.06;
+      return c;
+    }
+
+    vec3 adjustColor(vec3 c){
+      float l=dot(c,vec3(0.2126,0.7152,0.0722));
+      c=mix(vec3(l),c,uSaturation);
+      c=(c-0.5)*uContrast+0.5;
+      return c;
+    }
+
+    float gaussian(float x,float width,float soft){
+      float w=max(0.002,width);
+      return exp(-pow(abs(x)/w,mix(3.8,1.15,soft)));
+    }
+
+    float reflectionPattern(vec2 q,vec3 n){
+      vec2 dir=vec2(cos(uLightAngle),sin(uLightAngle));
+      vec2 side=vec2(-dir.y,dir.x);
+      float across=dot(q,side)-uLightOffset;
+      float along=dot(q,dir);
+      float width=max(0.01,uLightWidth);
+      float lengthFade=1.0-smoothstep(max(0.05,uLightLength)*0.65,max(0.05,uLightLength),abs(along));
+      float band=gaussian(across,width,uSoftness)*lengthFade;
+      if(uLightType==1){
+        band=gaussian(across,width*2.6,mix(0.65,1.0,uSoftness))*smoothstep(1.25,0.2,abs(along));
+      }else if(uLightType==2){
+        vec2 c=q-dir*(0.55+uLightOffset*0.45);
+        float arc=abs(length(c)-mix(0.72,1.2,uLightLength));
+        band=gaussian(arc,width*0.42,uSoftness)*smoothstep(-0.9,0.65,dot(normalize(c+0.0001),side));
+      }else if(uLightType==3){
+        float b1=gaussian(across-width*1.45,width*0.36,uSoftness);
+        float b2=gaussian(across+width*1.45,width*0.36,uSoftness);
+        band=(b1+b2)*lengthFade;
+      }else if(uLightType==4){
+        vec2 p=q-(side*uLightOffset+dir*0.18);
+        p.x*=mix(1.9,0.8,uLightLength);
+        band=exp(-dot(p,p)/max(0.01,width*width*2.2));
+      }else if(uLightType==5){
+        float hemi=clamp(dot(n,normalize(vec3(side*0.5,0.85))),0.0,1.0);
+        band=pow(hemi,mix(1.8,0.4,uSoftness))*0.75;
+      }
+      return band;
+    }
+
+    void main(){
+      vec2 uv=vec2(vUv.x,1.0-vUv.y);
+      vec2 q=(uv-uCenter)/(uSize*0.5);
+      float d=shapeDistance(q);
+      float aa=1.5/1024.0/max(uSize.x,uSize.y);
+      float mask=1.0-smoothstep(-aa,aa,d);
+      float inside=max(0.0,1.0-clamp(length(q),0.0,1.0));
+      float radial=clamp(length(q),0.0,1.3);
+      float profilePow=mix(0.65,3.2,uProfile);
+      float lens=pow(max(0.0,1.0-radial*radial),profilePow);
+      float warp=uRefraction*uConvexity*lens;
+      vec2 warpedUv=uv-(q*uSize*0.5)*warp;
+      vec2 radialDir=normalize(q+vec2(0.00001));
+      vec2 chromaShift=radialDir*uAberration*lens;
+      vec3 refracted;
+      refracted.r=sampleImage(warpedUv+chromaShift,uBlur).r;
+      refracted.g=sampleImage(warpedUv,uBlur).g;
+      refracted.b=sampleImage(warpedUv-chromaShift,uBlur).b;
+      refracted=adjustColor(refracted);
+
+      float nz=sqrt(max(0.02,1.0-min(0.985,dot(q,q))*uConvexity));
+      vec3 n=normalize(vec3(q*uConvexity,nz));
+      vec3 light=normalize(vec3(cos(uLightAngle)*cos(uLightElevation),sin(uLightAngle)*cos(uLightElevation),sin(uLightElevation)));
+      float ndl=clamp(dot(n,light),0.0,1.0);
+      float spec=pow(max(0.0,dot(reflect(-light,n),vec3(0.0,0.0,1.0))),mix(110.0,7.0,uSoftness));
+      float pattern=reflectionPattern(q,n);
+      float reflection=clamp((pattern*0.78+spec*0.9)*uReflection,0.0,2.5);
+
+      float edgeZone=1.0-smoothstep(-uEdgeThickness,0.0,d);
+      float fresnel=pow(clamp(1.0-n.z,0.0,1.0),mix(5.0,0.85,uEdgeSoftness));
+      vec2 edgeNormal=normalize(q+vec2(0.00001));
+      float edgeFacing=dot(edgeNormal,light.xy);
+      float brightEdge=edgeZone*fresnel*mix(0.34,1.0,clamp(edgeFacing*0.5+0.5,0.0,1.0))*uEdgeLight;
+      float darkEdge=edgeZone*pow(clamp(-edgeFacing*0.5+0.5,0.0,1.0),1.4)*uShadow*uRimBalance;
+      float innerShadow=(1.0-smoothstep(-uShadowSoftness,0.0,d))*uShadow*(1.0-uRimBalance*0.55);
+
+      vec3 overlay=uTint*(uTintAmount*(0.35+0.65*lens)+uGlassOpacity);
+      overlay+=uReflectionColor*reflection;
+      overlay+=uReflectionColor*brightEdge;
+      overlay-=vec3(darkEdge+innerShadow);
+      overlay+=vec3(ndl*uDepth*0.12);
+
+      float noise=hash21(gl_FragCoord.xy+uSeed);
+      overlay+=vec3((noise-0.5)*uGrain*mask);
+      overlay+=vec3(uHaze*(0.35+0.65*noise));
+      float spark=step(0.994+uSparkle*0.004,noise)*uSparkle*2.0;
+      overlay+=uReflectionColor*spark;
+
+      float overlayAlpha=clamp(mask*(uGlassOpacity+uTintAmount*0.65+reflection*0.50+brightEdge*0.48+darkEdge*0.18+innerShadow*0.16+uHaze*0.3+spark),0.0,1.0);
+      vec3 bg=sampleImage(uv,0.0);
+      vec3 glassColor=refracted+overlay;
+
+      if(uRenderMode==2){
+        float disp=clamp(0.5+warp*3.2,0.0,1.0);
+        gl_FragColor=vec4(vec3(disp),mask);
+        return;
+      }
+
+      if(uShowBackground==1){
+        vec3 result=mix(bg,glassColor,mask);
+        gl_FragColor=vec4(result,1.0);
+      }else{
+        vec3 premul=max(vec3(0.0),overlay)*overlayAlpha;
+        gl_FragColor=vec4(premul,overlayAlpha);
+      }
+    }
+  `;
+
+  function compile(type,source){
+    const shader=gl.createShader(type);
+    gl.shaderSource(shader,source);
+    gl.compileShader(shader);
+    if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader));
+    return shader;
+  }
+  const program=gl.createProgram();
+  gl.attachShader(program,compile(gl.VERTEX_SHADER,vertexSource));
+  gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fragmentSource));
+  gl.linkProgram(program);
+  if(!gl.getProgramParameter(program,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+  gl.useProgram(program);
+  const buffer=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+  const posLoc=gl.getAttribLocation(program,'aPosition');
+  gl.enableVertexAttribArray(posLoc);
+  gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);
+
+  const uniformNames=['uImage','uCenter','uSize','uRoundness','uShape','uConvexity','uProfile','uRefraction','uEdgeThickness','uDepth','uAberration','uBlur','uSaturation','uContrast','uTint','uTintAmount','uGlassOpacity','uLightType','uReflection','uLightAngle','uLightElevation','uLightOffset','uLightWidth','uLightLength','uSoftness','uReflectionColor','uEdgeLight','uEdgeSoftness','uRimBalance','uShadow','uShadowSoftness','uHaze','uGrain','uSparkle','uShowBackground','uRenderMode','uSeed','uImageScale','uImageOffset'];
+  const U={}; uniformNames.forEach(n=>U[n]=gl.getUniformLocation(program,n));
+
+  const defaults={
+    shape:0,glassX:50,glassY:50,glassW:92,glassH:92,roundness:42,lockRatio:true,
+    convexity:58,profile:105,refraction:30,edgeThickness:42,depth:38,aberration:10,blur:4,saturation:108,contrast:108,
+    tintColor:'#b9d7ff',tintAmount:9,glassOpacity:16,
+    lightType:0,reflection:82,lightAngle:322,lightElevation:52,lightOffset:-22,lightWidth:23,lightLength:88,softness:52,reflectionColor:'#ffffff',
+    edgeLight:92,edgeSoftness:28,rimBalance:57,shadow:25,shadowSoftness:44,haze:3,grain:2,sparkle:4,
+    showBackground:true,imageScaleX:1,imageScaleY:1,imageOffsetX:0,imageOffsetY:0
+  };
+  let state={...defaults};
+  let imageAspect=1;
+  let texture=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,texture);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+
+  function createDefaultDial(){
+    const c=document.createElement('canvas'); c.width=1024;c.height=1024;
+    const x=c.getContext('2d');
+    const g=x.createRadialGradient(512,420,80,512,512,520);g.addColorStop(0,'#33475a');g.addColorStop(.45,'#141b24');g.addColorStop(1,'#05070a');x.fillStyle=g;x.fillRect(0,0,1024,1024);
+    x.save();x.translate(512,512);
+    x.strokeStyle='#a8b6c7';x.fillStyle='#d9e1eb';x.lineCap='round';
+    for(let i=0;i<60;i++){x.save();x.rotate(i*Math.PI/30);x.lineWidth=i%5===0?9:3;x.beginPath();x.moveTo(0,-430);x.lineTo(0,i%5===0?-385:-405);x.stroke();x.restore()}
+    x.font='700 70px system-ui';x.textAlign='center';x.fillText('JIVES',0,-220);
+    x.font='600 40px system-ui';x.fillStyle='#91b9ff';x.fillText('GLASS TEST',0,245);
+    x.rotate(-.65);x.strokeStyle='#f4f7fb';x.lineWidth=18;x.beginPath();x.moveTo(-35,0);x.lineTo(0,-260);x.stroke();
+    x.rotate(1.85);x.strokeStyle='#77a7ff';x.lineWidth=12;x.beginPath();x.moveTo(-20,0);x.lineTo(0,-330);x.stroke();x.restore();
+    uploadTexture(c);
+  }
+
+  function uploadTexture(source){
+    gl.bindTexture(gl.TEXTURE_2D,texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);
+    imageAspect=(source.width||1)/(source.height||1);
+    fitImage();
+  }
+
+  function fitImage(){
+    if(imageAspect>=1){state.imageScaleX=imageAspect;state.imageScaleY=1;state.imageOffsetX=(1-imageAspect)/2;state.imageOffsetY=0}
+    else{state.imageScaleX=1;state.imageScaleY=1/imageAspect;state.imageOffsetX=0;state.imageOffsetY=(1-1/imageAspect)/2}
+    render();
+  }
+
+  function hexToRgb(hex){
+    const s=hex.replace('#','');
+    const n=parseInt(s.length===3?s.split('').map(v=>v+v).join(''):s,16);
+    return [((n>>16)&255)/255,((n>>8)&255)/255,(n&255)/255];
+  }
+  const pct=v=>Number(v)/100;
+  const rad=v=>Number(v)*Math.PI/180;
+
+  function setUniforms(showBackground=state.showBackground?1:0,renderMode=0){
+    gl.uniform1i(U.uImage,0);
+    gl.uniform2f(U.uCenter,pct(state.glassX),pct(state.glassY));
+    gl.uniform2f(U.uSize,pct(state.glassW),pct(state.glassH));
+    gl.uniform1f(U.uRoundness,pct(state.roundness));
+    gl.uniform1i(U.uShape,Number(state.shape));
+    gl.uniform1f(U.uConvexity,pct(state.convexity)*0.98);
+    gl.uniform1f(U.uProfile,(Number(state.profile)-10)/240);
+    gl.uniform1f(U.uRefraction,Number(state.refraction)/460);
+    gl.uniform1f(U.uEdgeThickness,0.01+pct(state.edgeThickness)*0.22);
+    gl.uniform1f(U.uDepth,pct(state.depth));
+    gl.uniform1f(U.uAberration,pct(state.aberration)*0.006);
+    gl.uniform1f(U.uBlur,pct(state.blur)*4.0);
+    gl.uniform1f(U.uSaturation,Number(state.saturation)/100);
+    gl.uniform1f(U.uContrast,Number(state.contrast)/100);
+    gl.uniform3fv(U.uTint,hexToRgb(state.tintColor));
+    gl.uniform1f(U.uTintAmount,pct(state.tintAmount)*0.42);
+    gl.uniform1f(U.uGlassOpacity,pct(state.glassOpacity)*0.30);
+    gl.uniform1i(U.uLightType,Number(state.lightType));
+    gl.uniform1f(U.uReflection,Number(state.reflection)/100);
+    gl.uniform1f(U.uLightAngle,rad(state.lightAngle));
+    gl.uniform1f(U.uLightElevation,rad(state.lightElevation));
+    gl.uniform1f(U.uLightOffset,Number(state.lightOffset)/115);
+    gl.uniform1f(U.uLightWidth,0.015+pct(state.lightWidth)*0.32);
+    gl.uniform1f(U.uLightLength,Number(state.lightLength)/100);
+    gl.uniform1f(U.uSoftness,pct(state.softness));
+    gl.uniform3fv(U.uReflectionColor,hexToRgb(state.reflectionColor));
+    gl.uniform1f(U.uEdgeLight,Number(state.edgeLight)/130);
+    gl.uniform1f(U.uEdgeSoftness,pct(state.edgeSoftness));
+    gl.uniform1f(U.uRimBalance,pct(state.rimBalance));
+    gl.uniform1f(U.uShadow,pct(state.shadow)*0.65);
+    gl.uniform1f(U.uShadowSoftness,0.008+pct(state.shadowSoftness)*0.2);
+    gl.uniform1f(U.uHaze,pct(state.haze)*0.12);
+    gl.uniform1f(U.uGrain,pct(state.grain)*0.08);
+    gl.uniform1f(U.uSparkle,pct(state.sparkle));
+    gl.uniform1i(U.uShowBackground,showBackground);
+    gl.uniform1i(U.uRenderMode,renderMode);
+    gl.uniform1f(U.uSeed,17.123);
+    gl.uniform2f(U.uImageScale,state.imageScaleX,state.imageScaleY);
+    gl.uniform2f(U.uImageOffset,state.imageOffsetX,state.imageOffsetY);
+  }
+
+  function render(showBackground=state.showBackground?1:0,renderMode=0){
+    gl.viewport(0,0,canvas.width,canvas.height);
+    gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
+    setUniforms(showBackground,renderMode);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+    document.getElementById('stageLabel').textContent=state.showBackground?'Preview met referentie':'Transparant glas';
+  }
+
+  const rangeIds=['glassX','glassY','glassW','glassH','roundness','convexity','profile','refraction','edgeThickness','depth','aberration','blur','saturation','contrast','tintAmount','glassOpacity','reflection','lightAngle','lightElevation','lightOffset','lightWidth','lightLength','softness','edgeLight','edgeSoftness','rimBalance','shadow','shadowSoftness','haze','grain','sparkle'];
+  const unitMap={glassX:'%',glassY:'%',glassW:'%',glassH:'%',roundness:'%',convexity:'%',profile:'',refraction:'',edgeThickness:'%',depth:'%',aberration:'%',blur:'%',saturation:'%',contrast:'%',tintAmount:'%',glassOpacity:'%',reflection:'%',lightAngle:'°',lightElevation:'°',lightOffset:'',lightWidth:'%',lightLength:'%',softness:'%',edgeLight:'%',edgeSoftness:'%',rimBalance:'%',shadow:'%',shadowSoftness:'%',haze:'%',grain:'%',sparkle:'%'};
+  function updateOutput(id){const out=document.querySelector(`output[data-for="${id}"]`);if(out)out.value=document.getElementById(id).value+(unitMap[id]||'')}
+  function syncUI(){
+    for(const [k,v] of Object.entries(state)){
+      const el=document.getElementById(k);if(!el)continue;
+      if(el.type==='checkbox')el.checked=!!v;else el.value=v;
+    }
+    document.getElementById('tintHex').value=state.tintColor;
+    document.getElementById('reflectionHex').value=state.reflectionColor;
+    rangeIds.forEach(updateOutput);
+    document.getElementById('toggleBackground').textContent=state.showBackground?'Referentie verbergen':'Referentie tonen';
+    render();
+  }
+
+  rangeIds.forEach(id=>{
+    const el=document.getElementById(id);
+    el.addEventListener('input',()=>{
+      const oldW=state.glassW,oldH=state.glassH;
+      state[id]=Number(el.value);
+      if(state.lockRatio&&id==='glassW'){state.glassH=state.glassW;document.getElementById('glassH').value=state.glassH;updateOutput('glassH')}
+      if(state.lockRatio&&id==='glassH'){state.glassW=state.glassH;document.getElementById('glassW').value=state.glassW;updateOutput('glassW')}
+      updateOutput(id);render();
+    });
+  });
+  ['shape','lightType'].forEach(id=>document.getElementById(id).addEventListener('change',e=>{state[id]=Number(e.target.value);render()}));
+  document.getElementById('lockRatio').addEventListener('change',e=>state.lockRatio=e.target.checked);
+
+  function bindColor(colorId,textId,key){
+    const c=document.getElementById(colorId),t=document.getElementById(textId);
+    c.addEventListener('input',()=>{state[key]=c.value;t.value=c.value;render()});
+    t.addEventListener('change',()=>{if(/^#[0-9a-f]{6}$/i.test(t.value)){state[key]=t.value;c.value=t.value;render()}else t.value=state[key]});
+  }
+  bindColor('tintColor','tintHex','tintColor');
+  bindColor('reflectionColor','reflectionHex','reflectionColor');
+
+  document.getElementById('imageInput').addEventListener('change',e=>{
+    const file=e.target.files[0];if(!file)return;
+    const img=new Image();img.onload=()=>{uploadTexture(img);setStatus('Afbeelding geladen',`${img.width} × ${img.height} pixels`);URL.revokeObjectURL(img.src)};img.src=URL.createObjectURL(file);
+  });
+  document.getElementById('presetInput').addEventListener('change',async e=>{
+    const file=e.target.files[0];if(!file)return;
+    try{const data=JSON.parse(await file.text());state={...defaults,...data};syncUI();setStatus('Instellingen geladen',file.name)}catch(err){setStatus('Kon JSON niet laden',err.message,true)}
+  });
+  document.getElementById('fitButton').onclick=()=>{fitImage();setStatus('Afbeelding passend gemaakt','De volledige referentie is gecentreerd.')};
+  document.getElementById('centerButton').onclick=()=>{state.glassX=50;state.glassY=50;syncUI()};
+  document.getElementById('toggleBackground').onclick=()=>{state.showBackground=!state.showBackground;syncUI()};
+  document.getElementById('resetButton').onclick=()=>{state={...defaults};syncUI();setStatus('Instellingen hersteld','De geladen afbeelding blijft behouden.')};
+
+  const presets={
+    clear:{convexity:38,profile:125,refraction:18,edgeThickness:30,depth:20,aberration:3,blur:1,tintAmount:3,glassOpacity:7,reflection:46,lightType:1,lightWidth:35,softness:72,edgeLight:55,shadow:10,haze:1,grain:0,sparkle:1,tintColor:'#d8ecff'},
+    domed:{convexity:92,profile:72,refraction:68,edgeThickness:76,depth:68,aberration:18,blur:4,tintAmount:8,glassOpacity:17,reflection:105,lightType:2,lightWidth:20,softness:40,edgeLight:145,shadow:42,haze:2,grain:1,sparkle:5},
+    sapphire:{convexity:58,profile:112,refraction:34,edgeThickness:48,depth:48,aberration:10,blur:2,tintColor:'#75bfff',tintAmount:18,glassOpacity:10,reflectionColor:'#c9ecff',reflection:75,lightType:0,edgeLight:105,shadow:22,haze:1,grain:0,sparkle:3},
+    studio:{convexity:55,profile:110,refraction:28,edgeThickness:43,depth:35,tintAmount:7,glassOpacity:13,reflection:132,lightType:3,lightWidth:17,lightLength:104,softness:28,lightOffset:-14,edgeLight:88,shadow:21,sparkle:7},
+    vintage:{convexity:76,profile:65,refraction:52,edgeThickness:72,depth:61,aberration:34,blur:10,tintColor:'#ffe5b1',tintAmount:17,glassOpacity:22,reflectionColor:'#fff2d1',reflection:61,lightType:2,edgeLight:118,shadow:39,haze:12,grain:12,sparkle:2},
+    smoked:{convexity:48,profile:130,refraction:24,edgeThickness:45,depth:44,aberration:7,blur:3,tintColor:'#6f7b8b',tintAmount:43,glassOpacity:28,reflectionColor:'#d8e1ed',reflection:48,lightType:5,edgeLight:75,shadow:48,haze:6,grain:2,sparkle:1}
+  };
+  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{Object.assign(state,presets[b.dataset.preset]);syncUI();setStatus('Stijl toegepast',b.textContent)});
+
+  function setStatus(title,text,error=false){
+    const s=document.getElementById('status');s.innerHTML=`<strong style="${error?'color:var(--danger)':''}">${title}.</strong> ${text}`;
+  }
+
+  let dragging=false,dragMode='glass',start={x:0,y:0,gx:0,gy:0,lo:0};
+  function pointerPos(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height}}
+  canvas.addEventListener('pointerdown',e=>{
+    const p=pointerPos(e);dragging=true;dragMode=e.shiftKey?'light':'glass';start={x:p.x,y:p.y,gx:state.glassX,gy:state.glassY,lo:state.lightOffset};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')
+  });
+  canvas.addEventListener('pointermove',e=>{
+    if(!dragging)return;const p=pointerPos(e);
+    if(dragMode==='light'){
+      state.lightOffset=Math.max(-100,Math.min(100,start.lo+(p.x-start.x)*180));document.getElementById('lightOffset').value=state.lightOffset;updateOutput('lightOffset');
+    }else{
+      state.glassX=Math.max(-10,Math.min(110,start.gx+(p.x-start.x)*100));state.glassY=Math.max(-10,Math.min(110,start.gy+(p.y-start.y)*100));
+      document.getElementById('glassX').value=state.glassX;document.getElementById('glassY').value=state.glassY;updateOutput('glassX');updateOutput('glassY');
+    }render();
+  });
+  const stopDrag=e=>{dragging=false;canvas.classList.remove('dragging');try{canvas.releasePointerCapture(e.pointerId)}catch{}};
+  canvas.addEventListener('pointerup',stopDrag);canvas.addEventListener('pointercancel',stopDrag);
+
+  function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+  function renderExport(showBg,mode,name){
+    const size=Number(document.getElementById('exportSize').value);
+    const crop=document.getElementById('cropToGlass').checked;
+    const oldW=canvas.width,oldH=canvas.height;
+    canvas.width=size;canvas.height=size;render(showBg,mode);
+    canvas.toBlob(blob=>{
+      if(!blob){setStatus('Export mislukt','De browser kon geen PNG maken.',true);return}
+      if(crop&&!showBg&&mode!==2){
+        const sx=Math.max(0,Math.floor((state.glassX-state.glassW/2)/100*size));
+        const sy=Math.max(0,Math.floor((state.glassY-state.glassH/2)/100*size));
+        const sw=Math.min(size-sx,Math.ceil(state.glassW/100*size));
+        const sh=Math.min(size-sy,Math.ceil(state.glassH/100*size));
+        const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=sw;c.height=sh;c.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,sw,sh);c.toBlob(b=>downloadBlob(b,name),'image/png');URL.revokeObjectURL(img.src)};img.src=URL.createObjectURL(blob);
+      }else downloadBlob(blob,name);
+      setStatus('PNG gemaakt',`${size} × ${size} pixels`);
+      canvas.width=oldW;canvas.height=oldH;render();
+    },'image/png');
+  }
+  document.getElementById('exportGlass').onclick=()=>renderExport(0,0,'jives-glass-transparent.png');
+  document.getElementById('exportComposite').onclick=()=>renderExport(1,0,'jives-glass-preview.png');
+  document.getElementById('exportMap').onclick=()=>renderExport(0,2,'jives-glass-displacement-map.png');
+  document.getElementById('savePreset').onclick=()=>{
+    const clean={...state};delete clean.imageScaleX;delete clean.imageScaleY;delete clean.imageOffsetX;delete clean.imageOffsetY;
+    downloadBlob(new Blob([JSON.stringify(clean,null,2)],{type:'application/json'}),'jives-glass-settings.json');setStatus('Instellingen opgeslagen','JSON preset gemaakt.')
+  };
+
+  createDefaultDial();syncUI();
+})();
+</script>
+</body>
+</html>
