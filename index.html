@@ -396,6 +396,7 @@
       float soft=clamp(uSoftness,0.0,1.0);
       float blur=width*(0.10+0.22*soft)+0.006;
       float pattern=0.0;
+      float rim=pow(clamp(1.0-n.z,0.0,1.0),0.60);
 
       if(uLightType==0){
         pattern+=rectLight(p,vec2(0.48,-0.22),vec2(width*0.34,len*0.38),blur);
@@ -417,20 +418,34 @@
         float hemi=clamp(dot(n,normalize(vec3(-0.30,-0.28,0.92))),0.0,1.0);
         pattern=pow(hemi,mix(2.6,0.55,soft))*0.95;
       }else if(uLightType==6){
-        pattern+=rectLight(p,vec2(0.50,-0.24),vec2(width*0.34,len*0.30),blur*0.95)*1.08;
-        pattern+=rectLight(p,vec2(0.50,-0.24),vec2(width*0.018,len*0.28),blur*0.42)*0.68;
-        pattern+=spotLight(p,vec2(0.10,-0.03),vec2(width*0.66,len*0.30),soft)*0.34;
-        pattern+=spotLight(p,vec2(-0.56,0.20),vec2(width*0.44,len*0.34),soft)*0.18;
+        float mainWin=rectLight(p,vec2(0.48,-0.22),vec2(width*0.28,len*0.25),blur*0.92);
+        float mainV=rectLight(p,vec2(0.48,-0.22),vec2(width*0.018,len*0.23),blur*0.40)*0.62;
+        float rimWin=rectLight(p,vec2(0.86,-0.34),vec2(width*0.18,len*0.18),blur*0.62);
+        float rimV=rectLight(p,vec2(0.86,-0.34),vec2(width*0.015,len*0.17),blur*0.32)*0.52;
+        float sideSheen=rectLight(p,vec2(0.98,0.02),vec2(width*0.05,len*0.42),blur*0.42)*0.34;
+        pattern+=mainWin*1.02+mainV+spotLight(p,vec2(0.10,-0.03),vec2(width*0.66,len*0.30),soft)*0.24;
+        pattern+=rim*(rimWin*1.28+rimV+sideSheen);
+        pattern+=spotLight(p,vec2(-0.58,0.22),vec2(width*0.38,len*0.28),soft)*(0.10+0.20*rim);
       }else if(uLightType==7){
-        pattern+=rectLight(p,vec2(0.50,-0.24),vec2(width*0.34,len*0.30),blur*0.90)*1.08;
-        pattern+=rectLight(p,vec2(0.50,-0.24),vec2(width*0.018,len*0.28),blur*0.40)*0.68;
-        pattern+=spotLight(p,vec2(0.10,-0.03),vec2(width*0.66,len*0.30),soft)*0.32;
-        pattern+=spotLight(p,vec2(-0.56,0.20),vec2(width*0.44,len*0.34),soft)*0.16;
+        float mainWin=rectLight(p,vec2(0.48,-0.22),vec2(width*0.28,len*0.25),blur*0.88);
+        float mainV=rectLight(p,vec2(0.48,-0.22),vec2(width*0.018,len*0.23),blur*0.38)*0.62;
+        float rimWin=rectLight(p,vec2(0.86,-0.34),vec2(width*0.18,len*0.18),blur*0.58);
+        float rimV=rectLight(p,vec2(0.86,-0.34),vec2(width*0.015,len*0.17),blur*0.30)*0.52;
+        float sideSheen=rectLight(p,vec2(0.98,0.02),vec2(width*0.05,len*0.42),blur*0.40)*0.34;
+        pattern+=mainWin*1.02+mainV+spotLight(p,vec2(0.10,-0.03),vec2(width*0.66,len*0.30),soft)*0.22;
+        pattern+=rim*(rimWin*1.24+rimV+sideSheen);
+        pattern+=spotLight(p,vec2(-0.58,0.22),vec2(width*0.38,len*0.28),soft)*(0.08+0.18*rim);
       }else if(uLightType==8){
-        pattern+=rectLight(p,vec2(0.54,-0.24),vec2(width*0.38,len*0.34),blur*0.90)*1.22;
-        pattern+=rectLight(p,vec2(0.54,-0.24),vec2(width*0.020,len*0.32),blur*0.36)*0.76;
-        pattern+=rectLight(p,vec2(0.54,-0.24),vec2(width*0.36,len*0.018),blur*0.36)*0.18;
-        pattern+=spotLight(p,vec2(0.14,-0.02),vec2(width*0.62,len*0.28),soft)*0.22;
+        float mainWin=rectLight(p,vec2(0.50,-0.22),vec2(width*0.26,len*0.24),blur*0.78);
+        float mainV=rectLight(p,vec2(0.50,-0.22),vec2(width*0.018,len*0.22),blur*0.34)*0.68;
+        float mainH=rectLight(p,vec2(0.50,-0.22),vec2(width*0.24,len*0.016),blur*0.32)*0.18;
+        float rimWin=rectLight(p,vec2(0.90,-0.34),vec2(width*0.24,len*0.22),blur*0.54);
+        float rimV=rectLight(p,vec2(0.90,-0.34),vec2(width*0.018,len*0.20),blur*0.28)*0.80;
+        float rimH=rectLight(p,vec2(0.90,-0.34),vec2(width*0.22,len*0.014),blur*0.26)*0.24;
+        float sideSheen=rectLight(p,vec2(1.02,0.02),vec2(width*0.05,len*0.48),blur*0.34)*0.48;
+        float oppositeWin=rectLight(p,vec2(-0.72,0.32),vec2(width*0.14,len*0.14),blur*0.64)*0.42;
+        pattern+=mainWin*0.72+mainV+mainH+spotLight(p,vec2(0.14,-0.02),vec2(width*0.52,len*0.24),soft)*0.10;
+        pattern+=rim*(rimWin*1.75+rimV+rimH+sideSheen)+oppositeWin*(0.30+0.70*rim);
       }else if(uLightType==9){
         pattern+=rectLight(p,vec2(0.18,-0.38),vec2(width*0.22,len*0.16),blur*0.72)*1.15;
         pattern+=rectLight(p,vec2(0.24,-0.36),vec2(width*0.07,len*0.12),blur*0.42)*0.66;
@@ -560,8 +575,8 @@
     shape:0,glassX:50,glassY:50,glassW:92,glassH:92,roundness:42,lockRatio:true,
     convexity:90,profile:78,refraction:40,edgeThickness:80,depth:72,aberration:8,blur:2,saturation:108,contrast:108,
     tintColor:'#e7e5dd',tintAmount:8,glassOpacity:18,
-    lightType:8,reflection:152,lightAngle:320,lightElevation:60,lightOffset:8,lightWidth:18,lightLength:124,softness:12,reflectionColor:'#ffffff',
-    edgeLight:172,edgeSoftness:18,rimBalance:64,shadow:36,shadowSoftness:40,haze:2,grain:0,sparkle:1,
+    lightType:8,reflection:170,lightAngle:320,lightElevation:60,lightOffset:12,lightWidth:17,lightLength:130,softness:8,reflectionColor:'#ffffff',
+    edgeLight:180,edgeSoftness:16,rimBalance:64,shadow:30,shadowSoftness:34,haze:1,grain:0,sparkle:1,
     showBackground:true,imageScaleX:1,imageScaleY:1,imageOffsetX:0,imageOffsetY:0
   };  let state={...defaults};
   let imageAspect=1;
@@ -708,9 +723,9 @@
   document.getElementById('resetButton').onclick=()=>{state={...defaults};syncUI();setStatus('Instellingen hersteld','De geladen afbeelding blijft behouden.')};
 
   const presets={
-    neutralDome:{shape:0,convexity:90,profile:78,refraction:40,edgeThickness:80,depth:72,aberration:8,blur:2,tintColor:'#e7e5dd',tintAmount:8,glassOpacity:18,lightType:8,reflection:152,lightAngle:320,lightElevation:60,lightOffset:8,lightWidth:18,lightLength:124,softness:12,reflectionColor:'#ffffff',edgeLight:172,edgeSoftness:18,rimBalance:64,shadow:36,shadowSoftness:40,haze:2,grain:0,sparkle:1},
-    mirrorWindow:{shape:0,convexity:92,profile:80,refraction:36,edgeThickness:78,depth:66,aberration:6,blur:1,tintColor:'#ecebe6',tintAmount:5,glassOpacity:14,lightType:8,reflection:178,lightAngle:320,lightElevation:60,lightOffset:10,lightWidth:16,lightLength:128,softness:8,reflectionColor:'#ffffff',edgeLight:178,edgeSoftness:16,rimBalance:58,shadow:28,shadowSoftness:34,haze:1,grain:0,sparkle:1},
-    watchSapphire:{shape:0,convexity:88,profile:86,refraction:38,edgeThickness:76,depth:66,aberration:22,blur:1,tintColor:'#d8e4f2',tintAmount:8,glassOpacity:16,lightType:8,reflection:154,lightAngle:320,lightElevation:60,lightOffset:8,lightWidth:16,lightLength:122,softness:10,reflectionColor:'#fbffff',edgeLight:168,edgeSoftness:18,rimBalance:60,shadow:30,shadowSoftness:36,haze:1,grain:0,sparkle:1},
+    neutralDome:{shape:0,convexity:92,profile:76,refraction:40,edgeThickness:82,depth:74,aberration:6,blur:2,tintColor:'#eceae2',tintAmount:6,glassOpacity:15,lightType:8,reflection:170,lightAngle:320,lightElevation:60,lightOffset:12,lightWidth:17,lightLength:130,softness:8,reflectionColor:'#ffffff',edgeLight:180,edgeSoftness:16,rimBalance:64,shadow:30,shadowSoftness:34,haze:1,grain:0,sparkle:1},
+    mirrorWindow:{shape:0,convexity:95,profile:72,refraction:38,edgeThickness:84,depth:74,aberration:4,blur:1,tintColor:'#f1f0eb',tintAmount:4,glassOpacity:12,lightType:8,reflection:192,lightAngle:320,lightElevation:60,lightOffset:16,lightWidth:18,lightLength:136,softness:6,reflectionColor:'#ffffff',edgeLight:186,edgeSoftness:14,rimBalance:62,shadow:24,shadowSoftness:30,haze:1,grain:0,sparkle:1},
+    watchSapphire:{shape:0,convexity:92,profile:80,refraction:40,edgeThickness:82,depth:72,aberration:24,blur:1,tintColor:'#d9e8f7',tintAmount:7,glassOpacity:14,lightType:8,reflection:176,lightAngle:320,lightElevation:60,lightOffset:14,lightWidth:17,lightLength:132,softness:7,reflectionColor:'#fbffff',edgeLight:180,edgeSoftness:14,rimBalance:62,shadow:26,shadowSoftness:30,haze:1,grain:0,sparkle:1},
     cabochonGlass:{shape:0,convexity:100,profile:56,refraction:50,edgeThickness:88,depth:88,aberration:6,blur:2,tintColor:'#ddd8cb',tintAmount:10,glassOpacity:20,lightType:9,reflection:158,lightAngle:322,lightElevation:62,lightOffset:12,lightWidth:18,lightLength:116,softness:12,reflectionColor:'#ffffff',edgeLight:186,edgeSoftness:18,rimBalance:72,shadow:50,shadowSoftness:48,haze:2,grain:0,sparkle:1},
     warmAcrylic:{shape:0,convexity:96,profile:64,refraction:48,edgeThickness:86,depth:84,aberration:10,blur:4,tintColor:'#e5d796',tintAmount:18,glassOpacity:22,lightType:9,reflection:146,lightAngle:322,lightElevation:62,lightOffset:12,lightWidth:18,lightLength:116,softness:14,reflectionColor:'#fff6d8',edgeLight:180,edgeSoftness:20,rimBalance:72,shadow:46,shadowSoftness:46,haze:3,grain:0,sparkle:1},
     studioCrystal:{shape:0,convexity:84,profile:94,refraction:30,edgeThickness:70,depth:58,aberration:4,blur:1,tintColor:'#ecebe7',tintAmount:5,glassOpacity:14,lightType:1,reflection:170,lightAngle:318,lightElevation:58,lightOffset:8,lightWidth:16,lightLength:132,softness:8,reflectionColor:'#ffffff',edgeLight:156,edgeSoftness:14,rimBalance:54,shadow:26,shadowSoftness:30,haze:1,grain:0,sparkle:2},
