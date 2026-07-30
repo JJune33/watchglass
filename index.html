@@ -385,56 +385,56 @@
     }
 
     float reflectionPattern(vec3 r,vec2 shift,vec3 n){
-      vec2 uv=envUvFromReflect(normalize(vec3(r.xy+shift,r.z)));
-      vec2 e=rotate2d(-uLightAngle)*(uv-vec2(0.5))+vec2(0.5);
-      e.x+=uLightOffset*0.18;
-      e.y+=mix(0.10,-0.10,uLightElevation);
+      vec3 rr=normalize(vec3(r.xy+shift,r.z));
+      vec2 proj=vec2(rr.x,-rr.y)/(1.22+rr.z);
+      vec2 p=rotate2d(-uLightAngle)*proj;
+      p+=vec2(uLightOffset*0.10,mix(0.18,-0.18,uLightElevation));
+      p*=vec2(1.00,1.04);
+
       float width=max(0.006,uLightWidth);
       float len=max(0.06,uLightLength);
       float soft=clamp(uSoftness,0.0,1.0);
+      float blur=width*(0.10+0.22*soft)+0.006;
       float pattern=0.0;
 
       if(uLightType==0){
-        pattern+=envRect(e,vec2(0.78,0.30),vec2(width*0.11,len*0.18),width*0.08+0.008);
-        pattern+=envRect(e,vec2(0.80,0.36),vec2(width*0.05,len*0.12),width*0.06+0.006)*0.55;
+        pattern+=rectLight(p,vec2(0.48,-0.22),vec2(width*0.34,len*0.38),blur);
+        pattern+=rectLight(p,vec2(0.52,-0.20),vec2(width*0.09,len*0.34),blur*0.55)*0.68;
       }else if(uLightType==1){
-        pattern+=envRect(e,vec2(0.72,0.30),vec2(width*0.07,len*0.20),width*0.06+0.006);
-        pattern+=envRect(e,vec2(0.81,0.34),vec2(width*0.07,len*0.20),width*0.06+0.006)*0.92;
+        pattern+=rectLight(p,vec2(0.44,-0.20),vec2(width*0.10,len*0.42),blur*0.85);
+        pattern+=rectLight(p,vec2(0.59,-0.19),vec2(width*0.10,len*0.42),blur*0.85)*0.95;
       }else if(uLightType==2){
-        pattern+=envRect(e,vec2(0.77,0.29),vec2(width*0.17,len*0.18),width*0.10+0.010);
-        pattern+=envRect(e,vec2(0.77,0.29),vec2(width*0.010,len*0.18),width*0.03+0.002)*0.65;
+        pattern+=rectLight(p,vec2(0.46,-0.22),vec2(width*0.42,len*0.34),blur*1.05);
+        pattern+=rectLight(p,vec2(0.46,-0.22),vec2(width*0.02,len*0.32),blur*0.45)*0.62;
       }else if(uLightType==3){
-        pattern+=envRect(e,vec2(0.76,0.28),vec2(width*0.17,len*0.18),width*0.10+0.010);
-        pattern+=envRect(e,vec2(0.76,0.28),vec2(width*0.010,len*0.18),width*0.03+0.002)*0.65;
-        pattern+=envRect(e,vec2(0.76,0.28),vec2(width*0.17,len*0.010),width*0.03+0.002)*0.52;
+        pattern+=rectLight(p,vec2(0.46,-0.22),vec2(width*0.42,len*0.34),blur*1.05);
+        pattern+=rectLight(p,vec2(0.46,-0.22),vec2(width*0.02,len*0.32),blur*0.45)*0.62;
+        pattern+=rectLight(p,vec2(0.46,-0.22),vec2(width*0.40,len*0.02),blur*0.45)*0.50;
       }else if(uLightType==4){
-        pattern+=envSpot(e,vec2(0.66,0.36),vec2(width*0.12,len*0.10),soft)*1.20;
-        pattern+=envSpot(e,vec2(0.63,0.35),vec2(width*0.20,len*0.15),soft)*0.22;
+        pattern+=spotLight(p,vec2(0.30,-0.05),vec2(width*0.95,len*0.45),soft)*1.18;
+        pattern+=spotLight(p,vec2(0.26,-0.03),vec2(width*1.45,len*0.70),soft)*0.20;
       }else if(uLightType==5){
         float hemi=clamp(dot(n,normalize(vec3(-0.30,-0.28,0.92))),0.0,1.0);
         pattern=pow(hemi,mix(2.6,0.55,soft))*0.95;
       }else if(uLightType==6){
-        pattern+=envRect(e,vec2(0.80,0.28),vec2(width*0.15,len*0.18),width*0.08+0.006)*1.10;
-        pattern+=envRect(e,vec2(0.80,0.28),vec2(width*0.012,len*0.18),width*0.03+0.002)*0.72;
-        pattern+=envSpot(e,vec2(0.62,0.38),vec2(width*0.10,len*0.08),soft)*0.74;
-        pattern+=envSpot(e,vec2(0.16,0.49),vec2(width*0.08,len*0.12),soft)*0.46;
-        pattern+=envRect(e,vec2(0.35,0.83),vec2(width*0.12,len*0.05),width*0.05+0.004)*0.30;
+        pattern+=rectLight(p,vec2(0.50,-0.24),vec2(width*0.34,len*0.30),blur*0.95)*1.08;
+        pattern+=rectLight(p,vec2(0.50,-0.24),vec2(width*0.018,len*0.28),blur*0.42)*0.68;
+        pattern+=spotLight(p,vec2(0.10,-0.03),vec2(width*0.66,len*0.30),soft)*0.34;
+        pattern+=spotLight(p,vec2(-0.56,0.20),vec2(width*0.44,len*0.34),soft)*0.18;
       }else if(uLightType==7){
-        pattern+=envRect(e,vec2(0.79,0.28),vec2(width*0.14,len*0.18),width*0.07+0.006)*1.08;
-        pattern+=envRect(e,vec2(0.79,0.28),vec2(width*0.010,len*0.18),width*0.03+0.002)*0.70;
-        pattern+=envSpot(e,vec2(0.60,0.39),vec2(width*0.10,len*0.08),soft)*0.70;
-        pattern+=envSpot(e,vec2(0.15,0.50),vec2(width*0.08,len*0.12),soft)*0.42;
-        pattern+=envRect(e,vec2(0.35,0.83),vec2(width*0.12,len*0.05),width*0.05+0.004)*0.28;
+        pattern+=rectLight(p,vec2(0.50,-0.24),vec2(width*0.34,len*0.30),blur*0.90)*1.08;
+        pattern+=rectLight(p,vec2(0.50,-0.24),vec2(width*0.018,len*0.28),blur*0.40)*0.68;
+        pattern+=spotLight(p,vec2(0.10,-0.03),vec2(width*0.66,len*0.30),soft)*0.32;
+        pattern+=spotLight(p,vec2(-0.56,0.20),vec2(width*0.44,len*0.34),soft)*0.16;
       }else if(uLightType==8){
-        pattern+=envRect(e,vec2(0.84,0.28),vec2(width*0.18,len*0.20),width*0.07+0.005)*1.16;
-        pattern+=envRect(e,vec2(0.84,0.28),vec2(width*0.012,len*0.20),width*0.02+0.002)*0.72;
-        pattern+=envSpot(e,vec2(0.64,0.39),vec2(width*0.11,len*0.09),soft)*0.78;
-        pattern+=envSpot(e,vec2(0.16,0.49),vec2(width*0.07,len*0.11),soft)*0.40;
+        pattern+=rectLight(p,vec2(0.54,-0.24),vec2(width*0.38,len*0.34),blur*0.90)*1.22;
+        pattern+=rectLight(p,vec2(0.54,-0.24),vec2(width*0.020,len*0.32),blur*0.36)*0.76;
+        pattern+=rectLight(p,vec2(0.54,-0.24),vec2(width*0.36,len*0.018),blur*0.36)*0.18;
+        pattern+=spotLight(p,vec2(0.14,-0.02),vec2(width*0.62,len*0.28),soft)*0.22;
       }else if(uLightType==9){
-        pattern+=envRect(e,vec2(0.60,0.12),vec2(width*0.09,len*0.10),width*0.05+0.004)*1.06;
-        pattern+=envRect(e,vec2(0.65,0.13),vec2(width*0.04,len*0.08),width*0.04+0.003)*0.64;
-        pattern+=envSpot(e,vec2(0.56,0.34),vec2(width*0.12,len*0.10),soft)*0.56;
-        pattern+=envSpot(e,vec2(0.17,0.52),vec2(width*0.07,len*0.10),soft)*0.30;
+        pattern+=rectLight(p,vec2(0.18,-0.38),vec2(width*0.22,len*0.16),blur*0.72)*1.15;
+        pattern+=rectLight(p,vec2(0.24,-0.36),vec2(width*0.07,len*0.12),blur*0.42)*0.66;
+        pattern+=spotLight(p,vec2(-0.08,-0.02),vec2(width*0.48,len*0.24),soft)*0.24;
       }
       return pattern;
     }
