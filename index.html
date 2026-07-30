@@ -151,7 +151,7 @@
     <details open>
       <summary>Reflectie</summary>
       <div class="section">
-        <div class="control"><label for="lightType">Lichttype</label><select id="lightType"><option value="0">Studio strip</option><option value="1">Brede softbox</option><option value="2">Gebogen raamlicht</option><option value="3">Dubbele strip</option><option value="4">Puntglans</option><option value="5">Zachte hemel</option><option value="6">Watch crystal arc</option><option value="7">Prism watch crystal</option></select></div>
+        <div class="control"><label for="lightType">Lichttype</label><select id="lightType"><option value="0">Studio strip</option><option value="1">Brede softbox</option><option value="2">Gebogen raamlicht</option><option value="3">Dubbele strip</option><option value="4">Puntglans</option><option value="5">Zachte hemel</option><option value="6">Watch crystal arc</option><option value="7">Prism watch crystal</option><option value="8">Mirror window</option><option value="9">Cabochon glass</option></select></div>
         <div class="control"><label for="reflection">Reflectiesterkte</label><output data-for="reflection"></output><input id="reflection" type="range" min="0" max="200" step="1" value="82"></div>
         <div class="control"><label for="lightAngle">Lichthoek</label><output data-for="lightAngle"></output><input id="lightAngle" type="range" min="0" max="360" step="1" value="322"></div>
         <div class="control"><label for="lightElevation">Lichthoogte</label><output data-for="lightElevation"></output><input id="lightElevation" type="range" min="5" max="90" step="1" value="52"></div>
@@ -187,7 +187,9 @@
       <summary>Snelle stijlen</summary>
       <div class="section presetGrid">
         <button data-preset="luxuryDome">Luxury dome</button>
+        <button data-preset="mirrorWindow">Mirror window</button>
         <button data-preset="watchSapphire">Watch sapphire</button>
+        <button data-preset="cabochonGlass">Cabochon glass</button>
         <button data-preset="warmAcrylic">Warm acrylic</button>
         <button data-preset="studioCrystal">Studio crystal</button>
         <button data-preset="amberDome">Amber dome</button>
@@ -347,6 +349,14 @@
       return band*endFade;
     }
 
+    float rectLight(vec2 p,vec2 center,vec2 halfSize,float blur){
+      vec2 d=abs(p-center)-halfSize;
+      float outside=length(max(d,0.0));
+      float inside=min(max(d.x,d.y),0.0);
+      float dist=outside+inside;
+      return exp(-pow(max(0.0,dist)/max(0.001,blur),1.3));
+    }
+
     float reflectionPattern(vec2 coord,vec3 n){
       vec2 p=rotate2d(-uLightAngle)*coord;
       float width=max(0.008,uLightWidth);
@@ -371,22 +381,39 @@
         pattern=pow(hemi,mix(3.0,0.55,uSoftness))*0.85;
       }else if(uLightType==6 || uLightType==7){
         vec2 arcP=p;
-        arcP.x += (0.14 + width*0.20)*(1.0-clamp(abs(p.y),0.0,1.0));
-        vec2 c1=(arcP-vec2(0.52+offset*0.26,0.02))*vec2(0.98,0.80);
-        vec2 c2=(arcP-vec2(0.56+offset*0.24,0.04))*vec2(1.00,0.84);
-        float arc1=gaussian(abs(length(c1)-0.92),width*1.22,mix(0.15,0.68,uSoftness));
-        float arc2=gaussian(abs(length(c2)-0.80),width*0.70,mix(0.06,0.42,uSoftness));
-        float arcMask=smoothstep(-0.18,0.72,p.x)*smoothstep(0.96,-0.58,p.y);
-        float crescent=(arc1*1.45 + arc2*0.95)*arcMask;
-        float topSpot=spotLight(p,vec2(-0.02,-0.42),vec2(width*1.92,width*1.50),mix(0.22,0.72,uSoftness))*1.18;
-        float leftSpot=spotLight(p,vec2(-0.83,-0.03),vec2(width*1.18,width*1.98),uSoftness)*0.86;
-        float lowerSpot=spotLight(p,vec2(-0.45,0.76),vec2(width*1.90,width*1.18),mix(0.34,0.80,uSoftness))*0.86;
-        float lowerSweep=stripLight(rotate2d(0.14)*p,0.62,width*2.2,max(0.30,len*0.74),mix(0.46,0.96,uSoftness))*0.28;
+        arcP.x += (0.14 + width*0.22)*(1.0-clamp(abs(p.y),0.0,1.0));
+        vec2 c1=(arcP-vec2(0.54+offset*0.24,0.01))*vec2(0.98,0.78);
+        vec2 c2=(arcP-vec2(0.58+offset*0.20,0.03))*vec2(1.02,0.84);
+        float arc1=gaussian(abs(length(c1)-0.92),width*1.08,mix(0.10,0.54,uSoftness));
+        float arc2=gaussian(abs(length(c2)-0.79),width*0.58,mix(0.04,0.34,uSoftness));
+        float arcMask=smoothstep(-0.18,0.76,p.x)*smoothstep(1.00,-0.56,p.y);
+        float crescent=(arc1*1.70 + arc2*1.00)*arcMask;
+        float topSpot=spotLight(p,vec2(-0.02,-0.42),vec2(width*1.70,width*1.26),mix(0.18,0.58,uSoftness))*1.14;
+        float leftSpot=spotLight(p,vec2(-0.84,-0.02),vec2(width*0.98,width*1.68),uSoftness)*0.82;
+        float lowerSpot=spotLight(p,vec2(-0.48,0.76),vec2(width*1.62,width*1.04),mix(0.24,0.62,uSoftness))*0.72;
+        float lowerSweep=stripLight(rotate2d(0.14)*p,0.60,width*1.80,max(0.30,len*0.72),mix(0.32,0.72,uSoftness))*0.22;
         pattern=crescent+topSpot+leftSpot+lowerSpot+lowerSweep;
         if(uLightType==7){
-          float echo=gaussian(abs(length((arcP-vec2(0.50+offset*0.26,0.00))*vec2(0.95,0.78))-0.88),width*1.55,mix(0.28,0.78,uSoftness))*arcMask;
-          pattern+=echo*0.42;
+          float echo=gaussian(abs(length((arcP-vec2(0.52+offset*0.24,0.01))*vec2(0.95,0.76))-0.88),width*1.34,mix(0.18,0.64,uSoftness))*arcMask;
+          pattern+=echo*0.46;
         }
+      }else if(uLightType==8){
+        vec2 w=rotate2d(0.08)*p;
+        float pane1=rectLight(w,vec2(0.57,-0.48),vec2(width*0.34,width*0.78),width*0.16);
+        float pane2=rectLight(w,vec2(0.72,-0.47),vec2(width*0.12,width*0.68),width*0.12);
+        float rim=gaussian(abs(length((p-vec2(0.54+offset*0.20,0.02))*vec2(0.98,0.80))-0.92),width*0.90,mix(0.06,0.34,uSoftness))*smoothstep(-0.10,0.82,p.x)*smoothstep(0.98,-0.50,p.y);
+        float topHot=spotLight(p,vec2(0.00,-0.36),vec2(width*1.22,width*0.96),mix(0.12,0.34,uSoftness))*0.68;
+        float sideHot=spotLight(p,vec2(-0.84,-0.06),vec2(width*0.84,width*1.44),mix(0.10,0.42,uSoftness))*0.56;
+        float bottomHot=spotLight(p,vec2(-0.48,0.80),vec2(width*1.14,width*0.80),mix(0.16,0.40,uSoftness))*0.46;
+        pattern=(pane1*1.55+pane2*1.20)+rim*1.36+topHot+sideHot+bottomHot;
+      }else if(uLightType==9){
+        vec2 w=rotate2d(0.10)*p;
+        float pane1=rectLight(w,vec2(0.18,-0.70),vec2(width*0.30,width*0.44),width*0.12);
+        float pane2=rectLight(w,vec2(0.30,-0.66),vec2(width*0.14,width*0.34),width*0.09);
+        float crown=gaussian(abs(length((p-vec2(0.10,-0.18))*vec2(0.92,0.74))-0.88),width*1.24,mix(0.22,0.66,uSoftness))*smoothstep(-0.72,0.54,p.x);
+        float edgeGlow=gaussian(abs(length((p+vec2(0.03,0.04))*vec2(0.98,0.86))-0.98),width*1.04,mix(0.20,0.72,uSoftness));
+        float bodyHot=spotLight(p,vec2(-0.10,-0.14),vec2(width*1.50,width*1.06),mix(0.18,0.50,uSoftness))*0.30;
+        pattern=(pane1*1.50+pane2*1.10)+crown*0.90+edgeGlow*0.54+bodyHot;
       }
       return pattern;
     }
@@ -411,7 +438,7 @@
       vec3 viewRay=vec3(0.0,0.0,-1.0);
       vec3 reflected=reflect(viewRay,n);
       vec2 env=reflected.xy/max(0.14,1.0+reflected.z)*1.34;
-      vec2 reflectionCoord=(uLightType==6||uLightType==7)?(q*0.92+env*0.25):env;
+      vec2 reflectionCoord=(uLightType>=6)?(q*0.90+env*0.28):env;
       vec2 chromaOffset=normalize(reflectionCoord+vec2(0.001))*uAberration*4.8;
       float patternR=reflectionPattern(reflectionCoord+chromaOffset,n);
       float patternG=reflectionPattern(reflectionCoord,n);
@@ -419,36 +446,39 @@
       vec3 patternRGB=vec3(patternR,patternG,patternB);
 
       float viewCos=clamp(n.z,0.0,1.0);
-      float fresnel=0.02+0.98*pow(1.0-viewCos,mix(6.8,2.0,uEdgeSoftness));
-      float reflectionBoost=(0.78+1.10*fresnel+0.55*domeStrength);
-      vec3 reflectionRGB=clamp(patternRGB*uReflection*reflectionBoost,0.0,4.0)*uReflectionColor;
+      float fresnel=0.015+0.985*pow(1.0-viewCos,mix(8.6,1.8,uEdgeSoftness));
+      float reflectionBoost=(0.92+1.55*fresnel+0.66*domeStrength);
+      vec3 reflectionRGB=clamp(patternRGB*uReflection*reflectionBoost,0.0,5.5)*uReflectionColor;
       float reflection=max(reflectionRGB.r,max(reflectionRGB.g,reflectionRGB.b));
 
       vec3 light=normalize(vec3(cos(uLightAngle)*cos(uLightElevation),sin(uLightAngle)*cos(uLightElevation),sin(uLightElevation)));
       vec2 edgeNormal=normalize(q+vec2(0.00001));
       float edgeFacing=dot(edgeNormal,normalize(light.xy+vec2(0.0001)));
-      float rimOuter=smoothstep(max(0.14,1.0-uEdgeThickness*2.65),1.0,radial);
-      float rimInner=smoothstep(max(0.06,1.0-uEdgeThickness*4.90-uShadowSoftness*0.9),max(0.18,1.0-uEdgeThickness*1.55),radial);
-      float rimEdge=smoothstep(max(0.20,1.0-uEdgeThickness*1.20),1.0,radial);
-      float brightEdge=(rimOuter*0.52+rimEdge*0.48)*fresnel*mix(0.28,1.12,edgeFacing*0.5+0.5)*uEdgeLight*(0.60+0.80*domeStrength);
-      float darkEdge=rimInner*pow(clamp(-edgeFacing*0.5+0.5,0.0,1.0),1.12)*uShadow*(0.55+0.60*uRimBalance);
-      float pathLength=clamp((1.0/max(0.11,viewCos)-1.0)/3.1,0.0,1.0);
-      float centerShadow=(1.0-lens)*(0.08+0.26*uDepth)*(0.35+0.65*domeStrength);
-      float innerShadow=pathLength*uShadow*(0.26+0.74*uRimBalance)+rimInner*uShadow*0.22+centerShadow;
+      float rimOuter=smoothstep(max(0.10,1.0-uEdgeThickness*2.95),1.0,radial);
+      float rimInner=smoothstep(max(0.03,1.0-uEdgeThickness*5.70-uShadowSoftness*1.2),max(0.16,1.0-uEdgeThickness*1.48),radial);
+      float rimEdge=smoothstep(max(0.26,1.0-uEdgeThickness*0.94),1.0,radial);
+      float rimCore=smoothstep(0.965-(uEdgeThickness*0.10),1.0,radial);
+      float brightEdge=(rimOuter*0.34+rimEdge*0.66)*fresnel*mix(0.36,1.30,edgeFacing*0.5+0.5)*uEdgeLight*(0.78+0.92*domeStrength);
+      brightEdge+=rimCore*(0.18+0.82*fresnel)*uEdgeLight*0.52;
+      float darkEdge=rimInner*pow(clamp(-edgeFacing*0.5+0.5,0.0,1.0),1.06)*uShadow*(0.64+0.66*uRimBalance);
+      float moatShadow=smoothstep(0.72,0.93,radial)*(1.0-rimEdge)*uShadow*0.18;
+      float pathLength=clamp((1.0/max(0.10,viewCos)-1.0)/2.8,0.0,1.0);
+      float centerShadow=(1.0-lens)*(0.06+0.24*uDepth)*(0.32+0.68*domeStrength);
+      float innerShadow=pathLength*uShadow*(0.18+0.70*uRimBalance)+rimInner*uShadow*0.24+centerShadow+moatShadow;
 
-      vec3 keyDirection=normalize(vec3(-0.48,-0.36,0.80));
+      vec3 keyDirection=normalize(vec3(-0.42,-0.34,0.84));
       float domeKey=dot(n,keyDirection)*0.5+0.5;
-      float domeShade=(domeKey-0.50)*uDepth*0.34;
-      float bodyGlow=(0.18+0.52*lens)*uDepth*(0.10+0.20*domeStrength);
+      float domeShade=(domeKey-0.50)*uDepth*0.30;
+      float bodyGlow=(0.10+0.40*lens)*uDepth*(0.08+0.16*domeStrength);
       float noise=hash21(gl_FragCoord.xy+uSeed);
-      float spark=step(0.996-uSparkle*0.0016,noise)*uSparkle*1.55;
+      float spark=step(0.997-uSparkle*0.0012,noise)*uSparkle*1.42;
 
-      float baseAlpha=clamp(mask*(uGlassOpacity*0.52+uTintAmount*(0.16+0.76*pathLength)+uHaze*(0.18+0.16*lens)+rimOuter*0.05),0.0,0.74);
-      float negativeEffect=darkEdge+innerShadow+max(0.0,-domeShade)*0.76;
-      negativeEffect+=max(0.0,(0.52-noise)*uGrain)*0.65;
-      float shadowAlpha=clamp(mask*negativeEffect*0.82,0.0,0.76);
-      float highlightAlpha=clamp(mask*(reflection*0.72+brightEdge*0.56+spark*0.82),0.0,0.985);
-      vec3 baseColor=clamp(uTint*(0.72+0.12*lens)+vec3(bodyGlow)+vec3(0.012,0.012,0.010),0.0,1.0);
+      float baseAlpha=clamp(mask*(uGlassOpacity*0.36+uTintAmount*(0.10+0.44*pathLength)+uHaze*(0.11+0.08*lens)+rimOuter*0.04),0.0,0.58);
+      float negativeEffect=darkEdge+innerShadow+max(0.0,-domeShade)*0.66;
+      negativeEffect+=max(0.0,(0.52-noise)*uGrain)*0.42;
+      float shadowAlpha=clamp(mask*negativeEffect*0.84,0.0,0.72);
+      float highlightAlpha=clamp(mask*(reflection*0.84+brightEdge*0.66+spark*0.76),0.0,0.992);
+      vec3 baseColor=clamp(uTint*(0.56+0.10*lens)+vec3(bodyGlow)+vec3(0.008,0.008,0.007),0.0,1.0);
       vec3 shadowColor=vec3(0.0);
       vec3 highlightEffect=reflectionRGB+uReflectionColor*(brightEdge+spark);
       float highlightStrength=max(highlightEffect.r,max(highlightEffect.g,highlightEffect.b));
@@ -660,15 +690,17 @@
   document.getElementById('resetButton').onclick=()=>{state={...defaults};syncUI();setStatus('Instellingen hersteld','De geladen afbeelding blijft behouden.')};
 
   const presets={
-    luxuryDome:{shape:0,convexity:92,profile:76,refraction:42,edgeThickness:78,depth:72,aberration:6,blur:3,tintColor:'#ddd7bf',tintAmount:16,glassOpacity:24,lightType:6,reflection:132,lightAngle:322,lightElevation:60,lightOffset:16,lightWidth:24,lightLength:116,softness:22,reflectionColor:'#fffdf1',edgeLight:158,edgeSoftness:24,rimBalance:68,shadow:50,shadowSoftness:56,haze:6,grain:1,sparkle:3},
-    watchSapphire:{shape:0,convexity:86,profile:84,refraction:38,edgeThickness:70,depth:64,aberration:18,blur:2,tintColor:'#c9d8ea',tintAmount:12,glassOpacity:20,lightType:6,reflection:124,lightAngle:320,lightElevation:58,lightOffset:12,lightWidth:22,lightLength:110,softness:20,reflectionColor:'#fbffff',edgeLight:148,edgeSoftness:22,rimBalance:62,shadow:42,shadowSoftness:50,haze:4,grain:1,sparkle:2},
-    warmAcrylic:{shape:0,convexity:94,profile:66,refraction:46,edgeThickness:82,depth:78,aberration:10,blur:6,tintColor:'#e7d884',tintAmount:24,glassOpacity:28,lightType:6,reflection:118,lightAngle:323,lightElevation:60,lightOffset:18,lightWidth:26,lightLength:118,softness:28,reflectionColor:'#fff7d8',edgeLight:160,edgeSoftness:28,rimBalance:70,shadow:56,shadowSoftness:60,haze:10,grain:3,sparkle:2},
-    studioCrystal:{shape:0,convexity:82,profile:92,refraction:34,edgeThickness:68,depth:60,aberration:8,blur:2,tintColor:'#e6e5de',tintAmount:8,glassOpacity:18,lightType:3,reflection:156,lightAngle:318,lightElevation:56,lightOffset:10,lightWidth:18,lightLength:126,softness:14,reflectionColor:'#ffffff',edgeLight:138,edgeSoftness:18,rimBalance:56,shadow:38,shadowSoftness:44,haze:3,grain:1,sparkle:4},
-    amberDome:{shape:0,convexity:98,profile:64,refraction:40,edgeThickness:84,depth:82,aberration:6,blur:5,saturation:84,contrast:92,tintColor:'#dcc834',tintAmount:42,glassOpacity:34,lightType:6,reflection:138,lightAngle:320,lightElevation:60,lightOffset:18,lightWidth:26,lightLength:118,softness:24,reflectionColor:'#fff7ce',edgeLight:170,edgeSoftness:28,rimBalance:68,shadow:54,shadowSoftness:58,haze:14,grain:6,sparkle:2},
-    prismaticDome:{shape:0,convexity:94,profile:74,refraction:52,edgeThickness:76,depth:74,aberration:84,blur:2,saturation:100,contrast:104,tintColor:'#d3dde7',tintAmount:10,glassOpacity:18,lightType:7,reflection:136,lightAngle:321,lightElevation:60,lightOffset:16,lightWidth:22,lightLength:114,softness:18,reflectionColor:'#ffffff',edgeLight:154,edgeSoftness:22,rimBalance:64,shadow:44,shadowSoftness:52,haze:7,grain:2,sparkle:2},
-    smokedBlack:{shape:0,convexity:88,profile:84,refraction:34,edgeThickness:74,depth:74,aberration:8,blur:3,tintColor:'#7d7a68',tintAmount:26,glassOpacity:30,lightType:6,reflection:124,lightAngle:322,lightElevation:60,lightOffset:14,lightWidth:24,lightLength:112,softness:20,reflectionColor:'#fffbed',edgeLight:150,edgeSoftness:22,rimBalance:68,shadow:62,shadowSoftness:56,haze:8,grain:2,sparkle:2},
-    clearMineral:{shape:0,convexity:74,profile:98,refraction:28,edgeThickness:56,depth:50,aberration:4,blur:1,tintColor:'#dde5ef',tintAmount:6,glassOpacity:14,lightType:6,reflection:104,lightAngle:320,lightElevation:56,lightOffset:10,lightWidth:20,lightLength:104,softness:26,reflectionColor:'#ffffff',edgeLight:122,edgeSoftness:26,rimBalance:54,shadow:30,shadowSoftness:40,haze:2,grain:0,sparkle:1}
-  };  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{Object.assign(state,presets[b.dataset.preset]);syncUI();setStatus('Stijl toegepast',b.textContent)});
+    luxuryDome:{shape:0,convexity:94,profile:74,refraction:42,edgeThickness:82,depth:72,aberration:6,blur:2,tintColor:'#ddd8c9',tintAmount:12,glassOpacity:20,lightType:8,reflection:150,lightAngle:320,lightElevation:62,lightOffset:12,lightWidth:18,lightLength:124,softness:14,reflectionColor:'#fffef8',edgeLight:170,edgeSoftness:18,rimBalance:66,shadow:42,shadowSoftness:48,haze:3,grain:0,sparkle:2},
+    watchSapphire:{shape:0,convexity:90,profile:82,refraction:40,edgeThickness:76,depth:66,aberration:22,blur:2,tintColor:'#d3e0ef',tintAmount:10,glassOpacity:18,lightType:8,reflection:144,lightAngle:320,lightElevation:60,lightOffset:10,lightWidth:18,lightLength:118,softness:14,reflectionColor:'#fcffff',edgeLight:164,edgeSoftness:18,rimBalance:62,shadow:38,shadowSoftness:44,haze:2,grain:0,sparkle:1},
+    warmAcrylic:{shape:0,convexity:96,profile:66,refraction:48,edgeThickness:84,depth:80,aberration:10,blur:5,tintColor:'#e4d995',tintAmount:22,glassOpacity:26,lightType:9,reflection:138,lightAngle:322,lightElevation:60,lightOffset:16,lightWidth:20,lightLength:118,softness:18,reflectionColor:'#fff6d9',edgeLight:176,edgeSoftness:22,rimBalance:72,shadow:50,shadowSoftness:54,haze:6,grain:1,sparkle:1},
+    studioCrystal:{shape:0,convexity:84,profile:94,refraction:34,edgeThickness:70,depth:58,aberration:6,blur:1,tintColor:'#e7e8e4',tintAmount:6,glassOpacity:16,lightType:3,reflection:168,lightAngle:316,lightElevation:58,lightOffset:8,lightWidth:16,lightLength:130,softness:10,reflectionColor:'#ffffff',edgeLight:150,edgeSoftness:16,rimBalance:56,shadow:34,shadowSoftness:40,haze:2,grain:0,sparkle:3},
+    amberDome:{shape:0,convexity:98,profile:62,refraction:42,edgeThickness:86,depth:84,aberration:8,blur:4,saturation:88,contrast:94,tintColor:'#d7c129',tintAmount:34,glassOpacity:28,lightType:8,reflection:148,lightAngle:320,lightElevation:62,lightOffset:14,lightWidth:18,lightLength:124,softness:16,reflectionColor:'#fff7ce',edgeLight:178,edgeSoftness:20,rimBalance:68,shadow:48,shadowSoftness:52,haze:6,grain:1,sparkle:1},
+    prismaticDome:{shape:0,convexity:94,profile:72,refraction:54,edgeThickness:78,depth:74,aberration:94,blur:2,saturation:100,contrast:104,tintColor:'#d6dfe7',tintAmount:8,glassOpacity:16,lightType:7,reflection:146,lightAngle:321,lightElevation:62,lightOffset:14,lightWidth:20,lightLength:118,softness:14,reflectionColor:'#ffffff',edgeLight:166,edgeSoftness:18,rimBalance:64,shadow:40,shadowSoftness:46,haze:3,grain:0,sparkle:1},
+    smokedBlack:{shape:0,convexity:90,profile:82,refraction:36,edgeThickness:78,depth:76,aberration:8,blur:2,tintColor:'#858174',tintAmount:20,glassOpacity:24,lightType:8,reflection:140,lightAngle:320,lightElevation:60,lightOffset:12,lightWidth:18,lightLength:120,softness:15,reflectionColor:'#fffced',edgeLight:166,edgeSoftness:18,rimBalance:70,shadow:54,shadowSoftness:50,haze:4,grain:0,sparkle:1},
+    clearMineral:{shape:0,convexity:80,profile:96,refraction:28,edgeThickness:62,depth:52,aberration:4,blur:1,tintColor:'#e0e6ee',tintAmount:4,glassOpacity:12,lightType:8,reflection:126,lightAngle:320,lightElevation:58,lightOffset:10,lightWidth:16,lightLength:112,softness:18,reflectionColor:'#ffffff',edgeLight:140,edgeSoftness:20,rimBalance:54,shadow:26,shadowSoftness:34,haze:1,grain:0,sparkle:1},
+    mirrorWindow:{shape:0,convexity:92,profile:80,refraction:36,edgeThickness:78,depth:64,aberration:6,blur:1,tintColor:'#ecebe6',tintAmount:5,glassOpacity:14,lightType:8,reflection:176,lightAngle:320,lightElevation:62,lightOffset:10,lightWidth:16,lightLength:126,softness:10,reflectionColor:'#ffffff',edgeLight:176,edgeSoftness:16,rimBalance:58,shadow:30,shadowSoftness:38,haze:1,grain:0,sparkle:2},
+    cabochonGlass:{shape:0,convexity:100,profile:56,refraction:50,edgeThickness:88,depth:88,aberration:6,blur:3,tintColor:'#d9d5c8',tintAmount:12,glassOpacity:22,lightType:9,reflection:152,lightAngle:322,lightElevation:62,lightOffset:16,lightWidth:18,lightLength:118,softness:16,reflectionColor:'#ffffff',edgeLight:186,edgeSoftness:20,rimBalance:74,shadow:58,shadowSoftness:54,haze:4,grain:0,sparkle:1}
+  }; document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{Object.assign(state,presets[b.dataset.preset]);syncUI();setStatus('Stijl toegepast',b.textContent)});
 
   function setStatus(title,text,error=false){
     const s=document.getElementById('status');s.innerHTML=`<strong style="${error?'color:var(--danger)':''}">${title}.</strong> ${text}`;
